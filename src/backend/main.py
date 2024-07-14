@@ -1,13 +1,12 @@
-import gradio as gr
 import json
 from openai import OpenAI
 from typing_extensions import override
 from openai import AssistantEventHandler
 
-from GetRainProbability import GetRainProbability_description, get_rain_probability
-from GetCurrentTemperature import GetCurrentTemperature_description, get_current_temperature
-from CreateGoogleTask import CreateGoogleTask_description, create_google_task
-from ListGoogleTasks import ListGoogleTasks_description, list_google_task
+from components.GetRainProbability import *
+from components.CreateGoogleTask import *
+from components.GetCurrentTemperature import *
+from components.ListGoogleTasks import *
 
 # Load OpenAI_token.json file to get the API key
 with open("OpenAI_token.json") as f:
@@ -22,7 +21,12 @@ client = OpenAI(
 assistant = client.beta.assistants.create(
     name="General Assistant for creating events, tasks, and parsing data",
     instructions="You are a personal assistant. Use provided information and functions to create events, tasks, and parse data. if there is an error just report it and don't try to recall the function.",
-    tools=[GetRainProbability_description, GetCurrentTemperature_description, CreateGoogleTask_description, ListGoogleTasks_description],
+    tools=[
+        GetRainProbability_description,
+        GetCurrentTemperature_description,
+        CreateGoogleTask_description,
+        ListGoogleTasks_description
+    ],
     model="gpt-3.5-turbo-0125",
 )
 
@@ -31,9 +35,14 @@ thread = client.beta.threads.create()
 message = client.beta.threads.messages.create(
     thread_id=thread.id,
     role="user",
-    content="What tasks do i have coming up?",
+    content="Create a test task, this is low priority, because it's to test the system, for example getting groceries and five subtasks",
 )
 
+message2 = client.beta.threads.messages.create(
+    thread_id=thread.id,
+    role="assistant",
+    content="I can help with that. Let me get the weather for you first.",
+)
 
 class EventHandler(AssistantEventHandler):
     @override
