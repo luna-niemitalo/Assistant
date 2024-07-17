@@ -74,7 +74,7 @@ export default defineComponent({
     },
     humanReadableTimestamp(): string {
       if (!this.model.timestamp) return "";
-      return new Date(this.model.timestamp * 1000).toLocaleString();
+      return new Date(this.model.timestamp).toLocaleString();
     },
     commentClasses(): string[] {
       return [
