@@ -2,20 +2,30 @@
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 import time
+import os
 import hashlib
 import json
 import queue
 from openai import OpenAI
 from typing_extensions import override
 from openai import AssistantEventHandler
+
+print(os.getcwd())
+path = os.getcwd() + "/config"
+os.environ["CONFIG_PATH"] = path
+
+SCOPES = json.load(open(os.environ["CONFIG_PATH"] + "/scopes.json"))
+
 from components.GetRainProbability import *
 from components.CreateGoogleTask import *
 from components.GetCurrentTemperature import *
 from components.ListGoogleTasks import *
+from components.CreateGoogleCalendarEvent import *
+from components.GetTimeAndDate import *
 
 
 
-with open("OpenAI_token.json") as f:
+with open(os.environ["CONFIG_PATH"] + "/OpenAI_token.json") as f:
     token = json.load(f)
 
 client = OpenAI(
@@ -42,9 +52,11 @@ assistant = client.beta.assistants.create(
         GetRainProbability_description,
         GetCurrentTemperature_description,
         CreateGoogleTask_description,
-        ListGoogleTasks_description
+        ListGoogleTasks_description,
+        CreateGoogleCalendarEvent_description,
+        GetCurrentTimeAndDate_description
     ],
-    model="gpt-3.5-turbo-0125",
+    model="gpt-4o",
 )
 
 message_objects = [
@@ -68,12 +80,10 @@ def get_data():
 
 @app.route('/api/messages', methods=['GET'])
 def messages():
-    print("Getting messages")
     def event_stream():
         prev_length = 0
         while True:
             if len(message_objects) != prev_length:
-                print("Sending new data")
                 yield f"data: {json.dumps([message_to_json(message) for message in message_objects])}\n\n"
                 prev_length = len(message_objects)
             time.sleep(0.1)
@@ -81,7 +91,6 @@ def messages():
 
 @app.route('/api/message/stream', methods=['GET'])
 def message_stream():
-    print("Getting message stream")
     def event_stream():
         while True:
             if not streamingMessage.empty():
@@ -93,24 +102,24 @@ def message_stream():
 
 @app.route('/api/message', methods=['POST'])
 def add_message():
-    print("Adding message")
+    jsonMessage = request.get_json()
+    print(jsonMessage["content"][1])
     newMessage = client.beta.threads.messages.create(
         thread_id=thread_id,
-        role="user",
-        content=request.get_json(),
+        role=jsonMessage["role"],
+        content=jsonMessage["content"],
     )
+    client.beta.threads.messages.create()
     message_objects.append(newMessage)
-    run_ai()
+    #run_ai()
     return newMessage.to_json()
 
 @app.route('/api/thread/id', methods=['GET'])
 def messages_thread_id():
-    print("Getting thread id")
     def event_stream():
         prev_thread_id = ""
         while True:
             if thread_id != prev_thread_id:
-                print("Sending new data")
                 yield f"data: {thread_id}\n\n"
                 prev_thread_id = thread_id
             time.sleep(1)
@@ -119,7 +128,6 @@ def messages_thread_id():
 
 @app.route('/api/thread/new', methods=['POST'])
 def new_thread():
-    print("Creating new thread")
     global thread_id, thread
     thread = client.beta.threads.create()
     thread_id = thread.id
@@ -135,7 +143,6 @@ def new_thread():
 class EventHandler(AssistantEventHandler):
     @override
     def on_event(self, event):
-        print("Handling event: " + event.event)
         #print(event.data)
         if event.event == 'thread.run.requires_action':
             run_id = event.data.id
@@ -152,13 +159,10 @@ class EventHandler(AssistantEventHandler):
                 "content": json.loads(event.data.delta.to_json())["content"],
             }
             streamingMessage.put(new_message)
-            print("Message delta: ")
-            print(event.data.delta)
         elif event.event == "thread.message.created":
             message_objects.append(event.data)
 
     def handle_requires_action(self, data, run_id):
-        print("Handling requires action")
         tool_outputs = []
         for tool in data.required_action.submit_tool_outputs.tool_calls:
             jsonArgs = json.loads(tool.function.arguments)
@@ -175,7 +179,6 @@ class EventHandler(AssistantEventHandler):
         self.submit_tool_outputs(tool_outputs, run_id)
 
     def submit_tool_outputs(self, tool_outputs, run_id):
-        print("Submitting tool outputs")
         with client.beta.threads.runs.submit_tool_outputs_stream(
                 thread_id=self.current_run.thread_id,
                 run_id=self.current_run.id,
