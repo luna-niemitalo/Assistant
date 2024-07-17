@@ -33,6 +33,23 @@ type Data = {
   url: string;
 };
 
+interface UserMessage {
+  role: "user";
+  content: (TextContent | ImageContent)[];
+}
+
+interface TextContent {
+  type: "text";
+  text: string;
+}
+
+interface ImageContent {
+  type: "image_url";
+  image_url: {
+    url: string;
+  };
+}
+
 export default defineComponent({
   name: "App",
   components: {
@@ -100,13 +117,61 @@ export default defineComponent({
       };
     },
 
-    handleNewUserMessage: async function (message: string) {
+    createMessage: async function (message: { text: string; images: File[] }) {
+      const result: UserMessage = {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: message.text,
+          },
+        ],
+      };
+
+      const readFileAsDataURL = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (reader.result && typeof reader.result === "string") {
+              resolve(reader.result);
+            } else {
+              reject(new Error("Failed to read file as data URL"));
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
+      const imageContents = await Promise.all(
+        message.images.map(async (image) => {
+          const base64Url = await readFileAsDataURL(image);
+          const imageContent: ImageContent = {
+            type: "image_url",
+            image_url: {
+              url: base64Url,
+            },
+          };
+          return imageContent;
+        })
+      );
+
+      result.content.push(...imageContents);
+      return result;
+    },
+
+    handleNewUserMessage: async function (message: {
+      text: string;
+      images: File[];
+    }) {
+      const userMessage = await this.createMessage(message);
+      console.log(userMessage);
       const response = await fetch(this.url + "/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(message),
+        body: JSON.stringify(userMessage),
       });
       message = await response.json();
       const serverMessage = this.serverMessageToMessage(message);
