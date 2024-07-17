@@ -43,10 +43,19 @@ const md = markdownit({
   },
 });
 
+export type CustomImage = {
+  data?: string;
+  lastModified: number;
+  name: string;
+  webkitRelativePath: string;
+  size: number;
+  type: string;
+};
+
 export type Message = {
-  thread_id?: string;
-  id: number;
+  id?: number;
   text: string;
+  images?: CustomImage[];
   role: "user" | "assistant" | "system";
   timestamp?: number;
 };
@@ -69,6 +78,7 @@ export default defineComponent({
   },
   computed: {
     getText(): string {
+      console.log(this.model.text);
       const markdown = this.model.text;
       return md.render(markdown);
     },

@@ -22,7 +22,7 @@
 import { defineComponent } from "vue";
 import ChatDisplay from "@/components/ChatDisplay.vue";
 import ChatInput from "@/components/ChatInput.vue";
-import { Message } from "@/components/ChatMessage.vue";
+import { CustomImage, Message } from "@/components/ChatMessage.vue";
 
 type Data = {
   messages: {
@@ -32,23 +32,6 @@ type Data = {
   thread_id: string;
   url: string;
 };
-
-interface UserMessage {
-  role: "user";
-  content: (TextContent | ImageContent)[];
-}
-
-interface TextContent {
-  type: "text";
-  text: string;
-}
-
-interface ImageContent {
-  type: "image_url";
-  image_url: {
-    url: string;
-  };
-}
 
 export default defineComponent({
   name: "App",
@@ -72,6 +55,7 @@ export default defineComponent({
       const eventSource = new EventSource(this.url + "/message/stream");
       eventSource.onmessage = (event) => {
         const parsed = JSON.parse(event.data);
+        console.log(parsed);
         const localEvent = this.messages[parsed.id];
         if (localEvent) {
           const newText = parsed.content[0].text.value;
@@ -110,22 +94,17 @@ export default defineComponent({
       eventSource.onmessage = (event) => {
         console.log("Received message");
         const serverMessages = JSON.parse(event.data);
+        console.log(serverMessages);
         for (const serverMessage of serverMessages) {
-          const message = this.serverMessageToMessage(serverMessage);
-          this.messages[message.id] = message;
+          this.messages[serverMessage.id] = serverMessage;
         }
       };
     },
 
     createMessage: async function (message: { text: string; images: File[] }) {
-      const result: UserMessage = {
+      const result: Message = {
         role: "user",
-        content: [
-          {
-            type: "text",
-            text: message.text,
-          },
-        ],
+        text: message.text,
       };
 
       const readFileAsDataURL = (file: File): Promise<string> => {
@@ -145,18 +124,13 @@ export default defineComponent({
 
       const imageContents = await Promise.all(
         message.images.map(async (image) => {
-          const base64Url = await readFileAsDataURL(image);
-          const imageContent: ImageContent = {
-            type: "image_url",
-            image_url: {
-              url: base64Url,
-            },
-          };
-          return imageContent;
+          const result: CustomImage = image;
+          result.data = await readFileAsDataURL(image);
+          return result;
         })
       );
-
-      result.content.push(...imageContents);
+      if (!result.images) result.images = [];
+      result.images.push(...imageContents);
       return result;
     },
 
@@ -173,20 +147,10 @@ export default defineComponent({
         },
         body: JSON.stringify(userMessage),
       });
-      message = await response.json();
-      const serverMessage = this.serverMessageToMessage(message);
-      this.messages[serverMessage.id] = serverMessage;
-    },
-
-    serverMessageToMessage: function (serverMessage: any): Message {
-      return {
-        id: serverMessage.id,
-        text: serverMessage.content
-          .map((content: { text: { value: any } }) => content.text?.value)
-          .join(" "),
-        role: serverMessage.role,
-        timestamp: new Date().getTime(),
-      };
+      const serverMessage: Message = await response.json();
+      if (serverMessage.id) {
+        this.messages[serverMessage.id] = serverMessage;
+      }
     },
   },
 });
