@@ -36,10 +36,12 @@ const md = markdownit({
   breaks: true,
   highlight: function (str: string, lang: string) {
     if (lang && hljs.getLanguage(lang)) {
-      return hljs.highlight(str, { language: lang }).value;
+      try {
+        return hljs.highlight(str, { language: lang }).value;
+        // eslint-disable-next-line no-empty
+      } catch (__) {}
     }
-
-    return ""; // use external default escaping
+    return ""; // Use external default escaping
   },
 });
 
@@ -84,6 +86,8 @@ export default defineComponent({
     },
     humanReadableTimestamp(): string {
       if (!this.model.timestamp) return "";
+      if (this.message.timestamp?.toString().length === 10)
+        return new Date(this.model.timestamp * 1000).toLocaleString();
       return new Date(this.model.timestamp).toLocaleString();
     },
     commentClasses(): string[] {
@@ -116,7 +120,7 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .hash-mismatch {
-  background-color: #ffcccc; /* Light red background for mismatch */
+  background-color: var(--background-color);
 }
 .comment-container {
   display: flex;
@@ -124,27 +128,24 @@ export default defineComponent({
 
   &.user-message {
     justify-content: flex-end;
+    .comment {
+      background-color: var(--user-message-bg);
+    }
   }
 
   &.assistant-message {
     justify-content: flex-start;
+    .comment {
+      background-color: var(--assistant-message-bg);
+    }
   }
 
   .comment {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    border: 1px solid var(--text-color);
     border-radius: 5px;
     padding: 1rem;
     max-width: 60%;
     position: relative;
-
-    &.user-message .comment {
-      background-color: #e1f5fe;
-    }
-
-    &.assistant-message .comment {
-      background-color: #f1f8e9;
-    }
 
     .comment-header {
       display: flex;

@@ -31,8 +31,8 @@ export default defineComponent({
         text: this.messageText.trim(),
         images: this.images,
       });
-      //this.messageText = "";
-      //this.images = [];
+      this.messageText = "";
+      this.images = [];
     },
     handleFileUpload(event: Event) {
       const files = (event.target as HTMLInputElement).files;
@@ -41,7 +41,8 @@ export default defineComponent({
       }
     },
     handleKeydown(event: KeyboardEvent) {
-      if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+      if (event.key === "Enter") {
+        if (event.shiftKey) return;
         this.sendMessage();
       }
     },
@@ -56,7 +57,7 @@ export default defineComponent({
   left: 0;
   width: calc(100% - 2rem);
   padding: 1rem;
-  background-color: #f0f0f0;
+  background-color: var(--contrast-background-color);
   display: flex;
   align-items: center;
 
@@ -72,6 +73,9 @@ export default defineComponent({
     padding: 0.5rem;
     font-size: 1rem;
     resize: none;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border-color: #454545;
   }
 
   input[type="file"] {

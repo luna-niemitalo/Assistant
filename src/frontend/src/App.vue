@@ -2,7 +2,7 @@
   <div id="app">
     <div class="header">
       <div class="container">
-        <span>Current time from server: {{ serverTime }}</span>
+        <theme-selector />
       </div>
       <div class="container" id="title">Assistant</div>
       <div class="container header_thread">
@@ -23,6 +23,7 @@ import { defineComponent } from "vue";
 import ChatDisplay from "@/components/ChatDisplay.vue";
 import ChatInput from "@/components/ChatInput.vue";
 import { CustomImage, Message } from "@/components/ChatMessage.vue";
+import ThemeSelector from "@/components/ThemeSelector.vue";
 
 type Data = {
   messages: {
@@ -36,6 +37,7 @@ type Data = {
 export default defineComponent({
   name: "App",
   components: {
+    ThemeSelector,
     ChatInput,
     ChatDisplay,
   },
@@ -157,11 +159,16 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
+  color: var(--text-color);
 
   .header {
     display: flex;
@@ -171,9 +178,9 @@ export default defineComponent({
     position: fixed;
     width: calc(100% - 3rem);
     z-index: 100;
-    background-color: white;
+    background-color: var(--background-color);
     .container {
-      border: solid 1px #ccc;
+      border: solid 1px var(--text-color);
       flex: 2;
       align-content: center;
       align-items: center;
