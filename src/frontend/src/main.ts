@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-
+import "highlight.js/styles/dark.css"; // You can choose any other Highlight.js theme
 /* import the fontawesome core */
 import { IconDefinition, library } from "@fortawesome/fontawesome-svg-core";
 
