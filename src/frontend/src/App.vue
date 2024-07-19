@@ -22,12 +22,12 @@
 import { defineComponent } from "vue";
 import ChatDisplay from "@/components/ChatDisplay.vue";
 import ChatInput from "@/components/ChatInput.vue";
-import { CustomImage, Message } from "@/components/ChatMessage.vue";
+import { ServerMessage, Message } from "@/components/ChatMessage.vue";
 import ThemeSelector from "@/components/ThemeSelector.vue";
 
 type Data = {
   messages: {
-    [key: string]: Message;
+    [key: string]: ServerMessage;
   };
   serverTime: string;
   thread_id: string;
@@ -103,56 +103,17 @@ export default defineComponent({
       };
     },
 
-    createMessage: async function (message: { text: string; images: File[] }) {
-      const result: Message = {
-        role: "user",
-        text: message.text,
-      };
-
-      const readFileAsDataURL = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            if (reader.result && typeof reader.result === "string") {
-              resolve(reader.result);
-            } else {
-              reject(new Error("Failed to read file as data URL"));
-            }
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      };
-
-      const imageContents = await Promise.all(
-        message.images.map(async (image) => {
-          const result: CustomImage = image;
-          result.data = await readFileAsDataURL(image);
-          return result;
-        })
-      );
-      if (!result.images) result.images = [];
-      result.images.push(...imageContents);
-      return result;
-    },
-
-    handleNewUserMessage: async function (message: {
-      text: string;
-      images: File[];
-    }) {
-      const userMessage = await this.createMessage(message);
-      console.log(userMessage);
+    handleNewUserMessage: async function (message: Message) {
+      console.log(message);
       const response = await fetch(this.url + "/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(userMessage),
+        body: JSON.stringify(message),
       });
-      const serverMessage: Message = await response.json();
-      if (serverMessage.id) {
-        this.messages[serverMessage.id] = serverMessage;
-      }
+      const serverMessage: ServerMessage = await response.json();
+      this.messages[serverMessage.id] = serverMessage;
     },
   },
 });

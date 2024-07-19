@@ -63,13 +63,25 @@ export default defineComponent({
       themes,
     };
   },
+  beforeMount() {
+    if (localStorage.darkMode) {
+      this.darkMode = localStorage.darkMode === "true";
+    }
+    if (localStorage.selectedTheme) {
+      this.selectedTheme = localStorage.selectedTheme;
+    }
+  },
+  mounted() {
+    this.applyTheme();
+  },
   methods: {
     toggleDarkMode() {
       this.darkMode = !this.darkMode;
       this.applyTheme();
     },
     applyTheme() {
-      console.log(this.selectedTheme);
+      localStorage.darkMode = this.darkMode;
+      localStorage.selectedTheme = this.selectedTheme;
       if (this.darkMode) {
         document.documentElement.setAttribute("data-theme", "dark");
       } else {

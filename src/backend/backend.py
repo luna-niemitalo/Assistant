@@ -71,6 +71,12 @@ def add_message():
     return json.dumps(result.get_fem())
 
 
+@app.route('/api/open_ai_image', methods=['GET'])
+def open_ai_image():
+    image_id = request.args.get('image_id')
+    return assistant.get_openai_image(image_id)
+
+
 @app.route('/api/thread/id', methods=['GET'])
 def messages_thread_id():
     thread_id = assistant.thread_id

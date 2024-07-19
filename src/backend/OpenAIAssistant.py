@@ -82,7 +82,7 @@ def deconstruct_openai_message(message):
     images = []
     for item in message.content:
         if item.type == "image_file":
-            images.append(item.image_file.to_json())
+            images.append(json.loads(item.image_file.to_json()))
     role = message.role
     timestamp = message.created_at
     result = FrontEndMessage(id=mid, text=text, images=images, role=role, timestamp=timestamp)

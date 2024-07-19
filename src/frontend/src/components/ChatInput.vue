@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { Message } from "@/components/ChatMessage.vue";
+import { CustomImage } from "@/components/ChatMessage.vue";
 
 export default defineComponent({
   name: "ChatInput",
@@ -23,13 +23,37 @@ export default defineComponent({
     };
   },
   methods: {
-    sendMessage() {
+    sendMessage: async function () {
       if (this.messageText.trim() === "" && this.images.length === 0) return;
       console.log(this.messageText);
       console.log(this.images);
+
+      const readFileAsDataURL = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (reader.result && typeof reader.result === "string") {
+              resolve(reader.result);
+            } else {
+              reject(new Error("Failed to read file as data URL"));
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
+      const imageContents = await Promise.all(
+        this.images.map(async (image) => {
+          const result: CustomImage = image;
+          result.data = await readFileAsDataURL(image);
+          return result;
+        })
+      );
       this.$emit("new-message", {
         text: this.messageText.trim(),
-        images: this.images,
+        images: imageContents,
+        role: "user",
       });
       this.messageText = "";
       this.images = [];

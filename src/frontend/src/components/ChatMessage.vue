@@ -6,9 +6,18 @@
         <span class="comment-timestamp">{{ humanReadableTimestamp }}</span>
       </div>
       <div class="comment-text" v-if="!editing" v-html="getText"></div>
-      <div v-else class="comment-edit">
+      <div v-if="editing" class="comment-edit">
         <input v-model="editText" class="edit-input" />
         <font-awesome-icon icon="check" class="icon-check" />
+      </div>
+      <div class="images">
+        <img
+          class="image"
+          v-for="image in images"
+          :src="image.data"
+          :alt="image.name"
+          :key="image.id"
+        />
       </div>
       <div class="comment-footer">
         <font-awesome-icon
@@ -54,6 +63,11 @@ export type CustomImage = {
   type: string;
 };
 
+type ServerImage_stump = {
+  file_id: string;
+  detail: "auto" | "low" | "high";
+};
+
 export type Message = {
   id?: number;
   text: string;
@@ -61,12 +75,37 @@ export type Message = {
   role: "user" | "assistant" | "system";
   timestamp?: number;
 };
+
+export type ServerMessage = {
+  id: number;
+  text: string;
+  images?: ServerImage_stump[];
+  role: "user" | "assistant" | "system";
+  timestamp: number;
+};
+
 type Data = {
-  model: Message;
+  model: ServerMessage;
   editing: boolean;
   hashMatch: boolean;
   editText: string;
+  images: {
+    [key: string]: CustomImage;
+  };
+  url: string;
 };
+
+export interface ServerImage {
+  id: string;
+  bytes: number;
+  created_at: number;
+  filename: string;
+  object: string;
+  purpose: string;
+  status: string;
+  status_details: null;
+  data: string;
+}
 
 export default defineComponent({
   components: { FontAwesomeIcon },
@@ -76,6 +115,8 @@ export default defineComponent({
       editing: false,
       hashMatch: true,
       editText: "",
+      images: {},
+      url: "http://127.0.0.1:5000/api",
     };
   },
   computed: {
@@ -103,16 +144,76 @@ export default defineComponent({
   },
   props: {
     message: {
-      type: Object as () => Message,
+      type: Object as () => ServerMessage,
       required: true,
     },
   },
   mounted() {
     this.model = this.message;
+    if (this.message.images && this.message.images.length > 0) {
+      for (const image of this.message.images) {
+        this.load_image(image);
+      }
+    }
   },
   watch: {
     message: function (newValue) {
       this.model = newValue;
+      if (newValue.images) {
+        for (const image of newValue.images) {
+          this.load_image(image);
+        }
+      }
+    },
+  },
+  methods: {
+    load_image: async function (image: ServerImage_stump) {
+      const response = await fetch(
+        this.url + "/open_ai_image?image_id=" + image.file_id
+      );
+      const data: ServerImage = await response.json();
+      console.log(data);
+      const customImage: CustomImage = {
+        data: this.createBlobUrl(data),
+        lastModified: data.created_at,
+        name: data.filename,
+        webkitRelativePath: "",
+        size: data.bytes,
+        type: data.purpose,
+      };
+      this.images[data.id] = customImage;
+    },
+    createBlobUrl(src: ServerImage) {
+      const b64toBlob = (
+        b64Data: string,
+        contentType = "",
+        sliceSize = 512
+      ) => {
+        const byteCharacters = atob(b64Data);
+        const byteArrays = [];
+
+        for (
+          let offset = 0;
+          offset < byteCharacters.length;
+          offset += sliceSize
+        ) {
+          const slice = byteCharacters.slice(offset, offset + sliceSize);
+
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+          }
+
+          const byteArray = new Uint8Array(byteNumbers);
+          byteArrays.push(byteArray);
+        }
+
+        return new Blob(byteArrays, { type: contentType });
+      };
+      const blob = b64toBlob(src.data, "image/png");
+      console.log(src);
+      if (!src) return;
+      return URL.createObjectURL(blob);
     },
   },
 });
@@ -146,6 +247,17 @@ export default defineComponent({
     padding: 1rem;
     max-width: 60%;
     position: relative;
+
+    .images {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      .image {
+        max-width: 100px;
+        max-height: 100px;
+        object-fit: contain;
+      }
+    }
 
     .comment-header {
       display: flex;

@@ -8,13 +8,13 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import ChatMessage from "@/components/ChatMessage.vue";
-import { Message } from "@/components/ChatMessage.vue";
+import { ServerMessage } from "@/components/ChatMessage.vue";
 
 export default defineComponent({
   components: { ChatMessage },
   props: {
     messages: {
-      type: Array as () => Message[],
+      type: Object as () => { [key: string]: ServerMessage },
       required: true,
     },
   },

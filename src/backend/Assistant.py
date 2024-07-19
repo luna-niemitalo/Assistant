@@ -1,3 +1,5 @@
+import base64
+import codecs
 import json
 import os
 
@@ -29,6 +31,15 @@ class Assistant:
             create_openai_thread(self)
             create_openai_assistant(self)
 
+    def get_openai_image(self, image_id):
+        file = self.client.files.retrieve(file_id=image_id)
+        file_bytes = self.client.files.content(file_id=image_id)
+        print(file_bytes.content[:100])
+        file = json.loads(file.to_json())
+        encoded_data = base64.b64encode(file_bytes.content).decode('utf-8')
+        file['data'] = encoded_data
+
+        return json.dumps(file)
     def add_message(self, message: FrontEndMessage):
         result = None
         if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_3.5":
