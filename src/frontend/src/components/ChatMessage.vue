@@ -11,12 +11,10 @@
         <font-awesome-icon icon="check" class="icon-check" />
       </div>
       <div class="images">
-        <img
-          class="image"
-          v-for="image in images"
-          :src="image.data"
-          :alt="image.name"
-          :key="image.id"
+        <ImageView
+          v-for="image in model.images"
+          :key="image.file_id"
+          :image_stump="image"
         />
       </div>
       <div class="comment-footer">
@@ -35,6 +33,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import ImageView from "./ImageView.vue";
 import markdownit from "markdown-it";
 import hljs from "highlight.js"; // https://highlightjs.org
 
@@ -54,15 +53,6 @@ const md = markdownit({
   },
 });
 
-export type CustomImage = {
-  data?: string;
-  lastModified: number;
-  name: string;
-  webkitRelativePath: string;
-  size: number;
-  type: string;
-};
-
 type ServerImage_stump = {
   file_id: string;
   detail: "auto" | "low" | "high";
@@ -74,6 +64,15 @@ export type Message = {
   images?: CustomImage[];
   role: "user" | "assistant" | "system";
   timestamp?: number;
+};
+
+export type CustomImage = {
+  data?: string;
+  lastModified: number;
+  name: string;
+  webkitRelativePath: string;
+  size: number;
+  type: string;
 };
 
 export type ServerMessage = {
@@ -89,34 +88,16 @@ type Data = {
   editing: boolean;
   hashMatch: boolean;
   editText: string;
-  images: {
-    [key: string]: CustomImage;
-  };
-  url: string;
 };
 
-export interface ServerImage {
-  id: string;
-  bytes: number;
-  created_at: number;
-  filename: string;
-  object: string;
-  purpose: string;
-  status: string;
-  status_details: null;
-  data: string;
-}
-
 export default defineComponent({
-  components: { FontAwesomeIcon },
+  components: { FontAwesomeIcon, ImageView },
   data(): Data {
     return {
       model: this.message,
       editing: false,
       hashMatch: true,
       editText: "",
-      images: {},
-      url: "http://127.0.0.1:5000/api",
     };
   },
   computed: {
@@ -150,70 +131,10 @@ export default defineComponent({
   },
   mounted() {
     this.model = this.message;
-    if (this.message.images && this.message.images.length > 0) {
-      for (const image of this.message.images) {
-        this.load_image(image);
-      }
-    }
   },
   watch: {
     message: function (newValue) {
       this.model = newValue;
-      if (newValue.images) {
-        for (const image of newValue.images) {
-          this.load_image(image);
-        }
-      }
-    },
-  },
-  methods: {
-    load_image: async function (image: ServerImage_stump) {
-      const response = await fetch(
-        this.url + "/open_ai_image?image_id=" + image.file_id
-      );
-      const data: ServerImage = await response.json();
-      console.log(data);
-      const customImage: CustomImage = {
-        data: this.createBlobUrl(data),
-        lastModified: data.created_at,
-        name: data.filename,
-        webkitRelativePath: "",
-        size: data.bytes,
-        type: data.purpose,
-      };
-      this.images[data.id] = customImage;
-    },
-    createBlobUrl(src: ServerImage) {
-      const b64toBlob = (
-        b64Data: string,
-        contentType = "",
-        sliceSize = 512
-      ) => {
-        const byteCharacters = atob(b64Data);
-        const byteArrays = [];
-
-        for (
-          let offset = 0;
-          offset < byteCharacters.length;
-          offset += sliceSize
-        ) {
-          const slice = byteCharacters.slice(offset, offset + sliceSize);
-
-          const byteNumbers = new Array(slice.length);
-          for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-          }
-
-          const byteArray = new Uint8Array(byteNumbers);
-          byteArrays.push(byteArray);
-        }
-
-        return new Blob(byteArrays, { type: contentType });
-      };
-      const blob = b64toBlob(src.data, "image/png");
-      console.log(src);
-      if (!src) return;
-      return URL.createObjectURL(blob);
     },
   },
 });

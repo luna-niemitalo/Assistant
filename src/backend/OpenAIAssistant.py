@@ -133,7 +133,7 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
                 thread_id=self.current_run.thread_id,
                 run_id=self.current_run.id,
                 tool_outputs=tool_outputs,
-                event_handler=self.assistant.event_handler,
+                event_handler=OpenAI_AssistantEventHandler(self.assistant),
         ) as stream:
             for text in stream.text_deltas:
                 print(text, end="", flush=True)
