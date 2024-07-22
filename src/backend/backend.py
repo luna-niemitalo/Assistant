@@ -8,10 +8,11 @@ from FrontEndMessage import FrontEndMessage
 from Assistant import Assistant
 
 print(os.getcwd())
-path = os.getcwd() + "/config"
+path = os.path.join(os.getcwd(), "src", "backend", "config")
+print(path)
 os.environ["CONFIG_PATH"] = path
 
-SCOPES = json.load(open(os.environ["CONFIG_PATH"] + "/scopes.json"))
+SCOPES = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "scopes.json")))
 
 assistant_options = ["OpenAI_4o", "OpenAI_3.5", "LLAMA3"]
 
