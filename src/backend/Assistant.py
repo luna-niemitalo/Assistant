@@ -22,7 +22,7 @@ class Assistant:
         self.selected_assistant = assistant
         if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_3.5":
             self.event_handler = OpenAI_AssistantEventHandler(self)
-            token = json.load(open(os.environ["CONFIG_PATH"] + "/OpenAI_token.json"))
+            token = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "OpenAI_token.json")))
             self.client = OpenAI(
                 organization=token["organization"],
                 api_key=token["api_key"],

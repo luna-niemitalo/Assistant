@@ -129,6 +129,8 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
         self.submit_tool_outputs(tool_outputs)
 
     def submit_tool_outputs(self, tool_outputs):
+        new_event_handler = OpenAI_AssistantEventHandler(self)  # Create a new instance of the event handler
+
         with self.assistant.client.beta.threads.runs.submit_tool_outputs_stream(
                 thread_id=self.current_run.thread_id,
                 run_id=self.current_run.id,
