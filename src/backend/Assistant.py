@@ -1,5 +1,4 @@
 import base64
-import codecs
 import json
 import os
 
@@ -20,7 +19,7 @@ class Assistant:
         self.thread = None
         self.assistant = None
         self.selected_assistant = assistant
-        if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_3.5":
+        if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_4o_mini":
             self.event_handler = OpenAI_AssistantEventHandler(self)
             token = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "OpenAI_token.json")))
             self.client = OpenAI(
@@ -42,7 +41,7 @@ class Assistant:
         return json.dumps(file)
     def add_message(self, message: FrontEndMessage):
         result = None
-        if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_3.5":
+        if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_4o_mini":
             oai_content = build_openai_message(self, message)
             oai_message = self.client.beta.threads.messages.create(
                 thread_id=self.thread_id,
@@ -60,20 +59,20 @@ class Assistant:
     def get_messages(self):
         results = []
         for message in self.message_objects:
-            if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_3.5":
+            if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_4o_mini":
                 fe_message = deconstruct_openai_message(message)
                 results.append(fe_message)
 
         return results
 
     def new_thread(self):
-        if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_3.5":
+        if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_4o_mini":
             create_openai_thread(self)
             return self.thread_id
 
     def run_ai(self):
         print("Running AI")
-        if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_3.5":
+        if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_4o_mini":
             new_event_handler = OpenAI_AssistantEventHandler(self)  # Create a new instance of the event handler
             with self.client.beta.threads.runs.stream(
                     thread_id=self.thread_id,

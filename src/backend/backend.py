@@ -14,12 +14,12 @@ os.environ["CONFIG_PATH"] = path
 
 SCOPES = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "scopes.json")))
 
-assistant_options = ["OpenAI_4o", "OpenAI_3.5", "LLAMA3"]
+assistant_options = ["OpenAI_4o", "OpenAI_4o_mini", "LLAMA3"]
 
 app = Flask(__name__)
 CORS(app)
 
-assistant = Assistant(assistant_options[0])
+assistant = Assistant(assistant_options[1])
 
 
 @app.route('/api/data', methods=['GET'])

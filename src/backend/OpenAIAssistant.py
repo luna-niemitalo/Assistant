@@ -9,6 +9,7 @@ from components.GetCurrentTemperature import *
 from components.ListGoogleTasks import *
 from components.CreateGoogleCalendarEvent import *
 from components.GetTimeAndDate import *
+from components.ListGoogleCalendarEvents import *
 
 
 def create_openai_assistant(self):
@@ -17,6 +18,8 @@ def create_openai_assistant(self):
         instructions="""
                 You are a personal assistant. 
                 Use provided information and functions to create events, tasks, and parse data
+                Also when you receive an event message, you should respond to it in a helpful manner
+                For example by listing and reminding about tasks to be done, or providing information about the day's schedule.
                 Use markdown to format your text
             """,
         tools=[
@@ -25,9 +28,10 @@ def create_openai_assistant(self):
             CreateGoogleTask_description,
             ListGoogleTasks_description,
             CreateGoogleCalendarEvent_description,
-            GetCurrentTimeAndDate_description
+            GetCurrentTimeAndDate_description,
+            GetGoogleCalendarEvents_description,
         ],
-        model="gpt-4o" if self.selected_assistant == "OpenAI_4o" else "gpt-3.5-turbo-0125",
+        model="gpt-4o" if self.selected_assistant == "OpenAI_4o" else "gpt-4o-mini",
     )
 
 
