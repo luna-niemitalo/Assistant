@@ -23,8 +23,7 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .chat_display {
-  padding: 5rem 1rem;
-  max-height: calc(100vh - 14rem);
+  flex: 1;
   overflow-y: auto;
 }
 </style>

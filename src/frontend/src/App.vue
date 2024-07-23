@@ -1,18 +1,6 @@
 <template>
   <div id="app">
-    <div class="header">
-      <div class="container">
-        <theme-selector />
-      </div>
-      <div class="container" id="title">Assistant</div>
-      <div class="container header_thread">
-        <span>Thread ID: {{ thread_id }}</span>
-        <div class="thread_controls">
-          <font-awesome-icon icon="plus" @click="newThread" />
-          <font-awesome-icon icon="sync" @click="initialize" />
-        </div>
-      </div>
-    </div>
+    <HeaderComponent :url="url" @initialize="initialize" />
     <ChatDisplay :messages="messages" />
     <chat-input @new-message="handleNewUserMessage" />
   </div>
@@ -22,8 +10,8 @@
 import { defineComponent } from "vue";
 import ChatDisplay from "@/components/ChatDisplay.vue";
 import ChatInput from "@/components/ChatInput.vue";
-import { ServerMessage, Message } from "@/components/ChatMessage.vue";
-import ThemeSelector from "@/components/ThemeSelector.vue";
+import { Message, ServerMessage } from "@/components/ChatMessage.vue";
+import HeaderComponent from "@/components/HeaderComponent.vue";
 
 type Data = {
   messages: {
@@ -37,7 +25,7 @@ type Data = {
 export default defineComponent({
   name: "App",
   components: {
-    ThemeSelector,
+    HeaderComponent,
     ChatInput,
     ChatDisplay,
   },
@@ -51,6 +39,11 @@ export default defineComponent({
   },
   mounted() {
     this.initialize();
+  },
+  provide() {
+    return {
+      initialize: this.initialize,
+    };
   },
   methods: {
     messageStream: async function () {
@@ -69,24 +62,10 @@ export default defineComponent({
         }
       };
     },
-    newThread: async function () {
-      this.clearMessages();
-      const response = await fetch(this.url + "/thread/new", {
-        method: "POST",
-      });
-      this.fetchData();
-    },
     initialize: async function () {
       this.clearMessages();
-      this.get_thread_id();
       this.fetchData();
       this.messageStream();
-    },
-    get_thread_id: async function () {
-      const eventSource = new EventSource(this.url + "/thread/id");
-      eventSource.onmessage = (event) => {
-        this.thread_id = event.data;
-      };
     },
     clearMessages: function () {
       this.messages = {};
@@ -123,6 +102,7 @@ export default defineComponent({
 body {
   background-color: var(--background-color);
   color: var(--text-color);
+  margin: unset !important;
 }
 
 #app {
@@ -131,35 +111,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: var(--text-color);
 
-  .header {
-    display: flex;
-    justify-content: space-between;
-    padding: 1rem;
-    gap: 1rem;
-    position: fixed;
-    width: calc(100% - 3rem);
-    z-index: 100;
-    background-color: var(--background-color);
-    .container {
-      border: solid 1px var(--text-color);
-      flex: 2;
-      align-content: center;
-      align-items: center;
-      text-align: center;
-    }
-    #title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      flex: 1;
-    }
-    &_thread {
-      display: flex;
-      justify-content: space-evenly;
-      .thread_controls {
-        display: flex;
-        gap: 1rem;
-      }
-    }
-  }
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 </style>

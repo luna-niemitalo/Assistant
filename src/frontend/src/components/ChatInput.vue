@@ -76,9 +76,6 @@ export default defineComponent({
 
 <style scoped>
 .chat-input {
-  position: fixed;
-  bottom: 0;
-  left: 0;
   width: calc(100% - 2rem);
   padding: 1rem;
   background-color: var(--contrast-background-color);
