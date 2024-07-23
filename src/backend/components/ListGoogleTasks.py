@@ -36,12 +36,16 @@ def parseLocalTask(googleTask, list):
 
 def list_google_task(importance = "all"):
     creds = createGoogleCredentials()
+    if creds["status"] == "error":
+        return json.dumps(creds)
+    else :
+        creds = creds["message"]
 
     try:
         service = build("tasks", "v1", credentials=creds)
 
 
-        taskLists = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "/taskIDs.json")))
+        taskLists = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "taskIDs.json")))
 
         if importance == "all":
             parsedTasks = []

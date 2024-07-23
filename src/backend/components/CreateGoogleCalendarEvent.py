@@ -42,6 +42,10 @@ def create_google_calendar_event(summary, start, end, location=None, description
     print("parameters", summary, start, end, location, description)
     creds = createGoogleCredentials()
 
+    if creds["status"] == "error":
+        return json.dumps(creds)
+    else :
+        creds = creds["message"]
 
     try:
         service = build("calendar", "v3", credentials=creds)

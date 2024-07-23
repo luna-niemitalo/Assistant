@@ -53,12 +53,16 @@ CreateGoogleTask_description = {
 def create_google_task(title, importance, description, subtasks = []):
     print("parameters", title, importance, description, subtasks)
     creds = createGoogleCredentials()
+    if creds["status"] == "error":
+        return json.dumps(creds)
+    else :
+        creds = creds["message"]
 
     try:
         service = build("tasks", "v1", credentials=creds)
 
 
-        taskLists = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "/taskIDs.json")))
+        taskLists = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "taskIDs.json")))
 
 
         localTask = {
@@ -70,7 +74,7 @@ def create_google_task(title, importance, description, subtasks = []):
             for subtask in subtasks:
                 localTask = {
                     "title": subtask["title"],
-                    "notes": subtask["description"],
+                    "notes": subtask["description"] if "description" in subtask else "",
                 }
                 service.tasks().insert(tasklist=taskLists[importance], body=localTask, parent=result["id"]).execute()
         return f"Task created: {result.get('title')}"

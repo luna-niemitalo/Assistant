@@ -81,3 +81,21 @@ class Assistant:
                     event_handler=new_event_handler
             ) as stream:
                 stream.until_done()
+
+    def set_assistant(self, selection):
+        self.thread_id = None
+        self.thread = None
+        self.assistant = None
+        self.selected_assistant = selection
+
+        if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_4o_mini":
+            self.event_handler = OpenAI_AssistantEventHandler(self)
+            token = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "OpenAI_token.json")))
+            self.client = OpenAI(
+                organization=token["organization"],
+                api_key=token["api_key"],
+                project=token["project"],
+            )
+            create_openai_thread(self)
+            create_openai_assistant(self)
+

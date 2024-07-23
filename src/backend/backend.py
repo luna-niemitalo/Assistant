@@ -8,7 +8,7 @@ from FrontEndMessage import FrontEndMessage
 from Assistant import Assistant
 
 print(os.getcwd())
-path = os.path.join(os.getcwd(), "src", "backend", "config")
+path = os.path.join(os.getcwd(), "config")
 print(path)
 os.environ["CONFIG_PATH"] = path
 
@@ -98,6 +98,17 @@ def messages_thread_id():
 def new_thread():
     print("New thread")
     return assistant.new_thread()
+
+
+@app.route('/api/assistant', methods=['GET'])
+def get_assistant():
+    return jsonify({"selection": assistant.selected_assistant, "options": assistant_options})
+
+@app.route('/api/assistant', methods=['POST'])
+def set_assistant():
+    selection = request.get_json(force=True)['selection']
+    assistant.set_assistant(selection)
+    return jsonify({"selection": assistant.selected_assistant, "options": assistant_options})
 
 
 if __name__ == '__main__':

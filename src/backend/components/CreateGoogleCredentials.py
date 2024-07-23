@@ -18,13 +18,16 @@ def createGoogleCredentials():
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+            except Exception as e:
+                return {"status": "error", "message": str(e)}
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                os.environ["CONFIG_PATH"] + "/credentials.json", SCOPES
+                os.path.join(os.environ["CONFIG_PATH"] + "credentials.json"), SCOPES
             )
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open(os.path.join(os.environ["CONFIG_PATH"], "token.json"), "w") as token:
             token.write(creds.to_json())
-    return creds
+    return {"status": "success", "message": creds}
