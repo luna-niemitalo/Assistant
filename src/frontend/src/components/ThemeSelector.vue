@@ -120,6 +120,7 @@ export default defineComponent({
   --text-color: #000000;
   --user-message-bg: #f3e7ff;
   --assistant-message-bg: #e7f7e7;
+  --system-message-bg: #b0b0b0;
 }
 
 [data-theme="dark"] {
@@ -128,6 +129,7 @@ export default defineComponent({
   --text-color: #ddd;
   --user-message-bg: #3a1c5a;
   --assistant-message-bg: #3a5a1c;
+  --system-message-bg: #4f4f4f;
 }
 #theme-select {
   margin-left: 0.5rem;

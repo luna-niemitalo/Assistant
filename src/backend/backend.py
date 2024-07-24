@@ -37,10 +37,23 @@ def messages():
         while True:
             fem = assistant.get_messages()
             if len(fem) != prev_length:
-                print("Messages: ", fem)
                 yield f"data: {json.dumps([message.get_fem() for message in fem])}\n\n"
                 prev_length = len(fem)
             time.sleep(0.1)
+
+    return Response(event_stream(), mimetype="text/event-stream")
+
+
+@app.route('/api/status', methods=['GET'])
+def status_stream():
+    def event_stream():
+        old_len = 0
+        while True:
+            if len(assistant.status_messages) > old_len:
+                old_len = len(assistant.status_messages)
+                yield f"data: {json.dumps(assistant.status_messages)}\n\n"
+            else:
+                time.sleep(0.3)
 
     return Response(event_stream(), mimetype="text/event-stream")
 

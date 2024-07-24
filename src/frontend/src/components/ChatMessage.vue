@@ -1,6 +1,6 @@
 <template>
   <div :class="commentClasses">
-    <div class="comment">
+    <div class="comment" v-if="!isSystemMessage">
       <div class="comment-header">
         <span class="comment-user">{{ name }}</span>
         <span class="comment-timestamp">{{ humanReadableTimestamp }}</span>
@@ -17,7 +17,7 @@
           :image_stump="image"
         />
       </div>
-      <div class="comment-footer">
+      <div class="comment-footer" v-if="message.id">
         <font-awesome-icon
           icon="edit"
           @click="editing = true"
@@ -27,6 +27,12 @@
         <font-awesome-icon icon="thumbs-down" class="icon-dislike" />
         <font-awesome-icon icon="trash" class="icon-delete" />
       </div>
+    </div>
+    <div class="comment" v-else>
+      <span class="timestamp">
+        <p>{{ humanReadableTimestamp }}</p>
+      </span>
+      <span class="comment-text" v-html="getText"></span>
     </div>
   </div>
 </template>
@@ -58,6 +64,11 @@ type ServerImage_stump = {
   detail: "auto" | "low" | "high";
 };
 
+export type StatusMessage = {
+  timestamp: number;
+  message: string;
+};
+
 export type Message = {
   id?: number;
   text: string;
@@ -76,7 +87,7 @@ export type CustomImage = {
 };
 
 export type ServerMessage = {
-  id: number;
+  id?: number;
   text: string;
   images?: ServerImage_stump[];
   role: "user" | "assistant" | "system";
@@ -101,21 +112,27 @@ export default defineComponent({
     };
   },
   computed: {
+    isSystemMessage(): boolean {
+      return this.model.role === "system";
+    },
     getText(): string {
-      console.log(this.model.text);
       const markdown = this.model.text;
       return md.render(markdown);
     },
     humanReadableTimestamp(): string {
-      if (!this.model.timestamp) return "";
-      if (this.message.timestamp?.toString().length === 10)
-        return new Date(this.model.timestamp * 1000).toLocaleString();
-      return new Date(this.model.timestamp).toLocaleString();
+      let ts = this.model.timestamp;
+      if (!ts) return "";
+      ts = parseInt(ts.toString());
+      if (ts.toString().length === 10)
+        return new Date(ts * 1000).toLocaleString();
+      return new Date(ts).toLocaleString();
     },
     commentClasses(): string[] {
       return [
         "comment-container",
-        this.model.role === "user" ? "user-message" : "assistant-message",
+        this.model.role === "user"
+          ? "user-message"
+          : "assistant-message" + (this.isSystemMessage ? " system" : ""),
         this.hashMatch ? "" : "hash-mismatch",
       ];
     },
@@ -159,6 +176,21 @@ export default defineComponent({
     justify-content: flex-start;
     .comment {
       background-color: var(--assistant-message-bg);
+    }
+
+    &.system {
+      .comment {
+        background-color: var(--system-message-bg);
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-top: unset;
+        padding-bottom: unset;
+        .comment-text {
+          margin-bottom: unset;
+        }
+      }
     }
   }
 

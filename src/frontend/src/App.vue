@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <HeaderComponent :url="url" @initialize="initialize" />
-    <ChatDisplay :messages="messages" />
+    <ChatDisplay :messages="messages" :status_messages="status_messages" />
     <chat-input @new-message="handleNewUserMessage" />
   </div>
 </template>
@@ -10,7 +10,11 @@
 import { defineComponent } from "vue";
 import ChatDisplay from "@/components/ChatDisplay.vue";
 import ChatInput from "@/components/ChatInput.vue";
-import { Message, ServerMessage } from "@/components/ChatMessage.vue";
+import {
+  Message,
+  ServerMessage,
+  StatusMessage,
+} from "@/components/ChatMessage.vue";
 import HeaderComponent from "@/components/HeaderComponent.vue";
 
 type Data = {
@@ -20,6 +24,7 @@ type Data = {
   serverTime: string;
   thread_id: string;
   url: string;
+  status_messages: StatusMessage[];
 };
 
 export default defineComponent({
@@ -35,22 +40,26 @@ export default defineComponent({
       messages: {},
       thread_id: "",
       url: "http://127.0.0.1:5000/api",
+      status_messages: [],
     };
   },
   mounted() {
     this.initialize();
   },
-  provide() {
-    return {
-      initialize: this.initialize,
-    };
-  },
   methods: {
+    get_status_messages() {
+      const eventSource = new EventSource(this.url + "/status");
+      eventSource.onmessage = (event) => {
+        console.log("Status message");
+        const status_messages: StatusMessage[] = JSON.parse(event.data);
+        console.log(status_messages);
+        this.status_messages = status_messages;
+      };
+    },
     messageStream: async function () {
       const eventSource = new EventSource(this.url + "/message/stream");
       eventSource.onmessage = (event) => {
         const parsed = JSON.parse(event.data);
-        console.log(parsed);
         const localEvent = this.messages[parsed.id];
         if (localEvent) {
           const newText = parsed.content[0].text.value;
@@ -66,9 +75,11 @@ export default defineComponent({
       this.clearMessages();
       this.fetchData();
       this.messageStream();
+      this.get_status_messages();
     },
     clearMessages: function () {
       this.messages = {};
+      this.status_messages = [];
     },
     fetchData: async function () {
       const eventSource = new EventSource(this.url + "/messages");
@@ -92,7 +103,9 @@ export default defineComponent({
         body: JSON.stringify(message),
       });
       const serverMessage: ServerMessage = await response.json();
-      this.messages[serverMessage.id] = serverMessage;
+      if (serverMessage.id) {
+        this.messages[serverMessage.id] = serverMessage;
+      }
     },
   },
 });

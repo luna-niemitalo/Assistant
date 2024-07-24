@@ -12,6 +12,7 @@ import queue
 class Assistant:
     selected_assistant = ""
     message_objects = []
+    status_messages = []
     streamingMessage = queue.Queue()
 
     def __init__(self, assistant):
