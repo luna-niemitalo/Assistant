@@ -22,7 +22,7 @@ CreateGoogleCalendarEvent_description = {
                 },
                 "description": {
                     "type": "string",
-                    "description": "A detailed description of the event"
+                    "description": "HTML  formatted event description"
                 },
                 "start": {
                     "type": "string",
