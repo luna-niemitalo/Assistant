@@ -10,6 +10,11 @@ from components.ListGoogleTasks import *
 from components.CreateGoogleCalendarEvent import *
 from components.GetTimeAndDate import *
 from components.ListGoogleCalendarEvents import *
+from components.ParseWebsite import *
+from components.ListYoutubePlaylists import *
+from components.CreateYoutubePlaylist import *
+from components.AddItemToYoutubePlaylist import *
+from components.SearchYoutubeVideo import *
 
 
 def create_openai_assistant(self):
@@ -20,7 +25,7 @@ def create_openai_assistant(self):
                 Use provided information and functions to create events, tasks, and parse data
                 Also when you receive an event message, you should respond to it in a helpful manner
                 For example by listing and reminding about tasks to be done, or providing information about the day's schedule.
-                Use markdown to format your text
+                Use markdown to format your text except when managing google tools, for google tools write the description using HTML and be verbose, and include as much information as possible, and make it look neat and readable 
             """,
         tools=[
             GetRainProbability_description,
@@ -30,6 +35,11 @@ def create_openai_assistant(self):
             CreateGoogleCalendarEvent_description,
             GetCurrentTimeAndDate_description,
             GetGoogleCalendarEvents_description,
+            ParseWebsite_description,
+            ListYouTubePlaylists_description,
+            CreateYouTubePlaylist_description,
+            AddToYouTubePlaylist_description,
+            SearchYouTube_description
         ],
         model="gpt-4o" if self.selected_assistant == "OpenAI_4o" else "gpt-4o-mini",
     )
@@ -38,6 +48,7 @@ def create_openai_assistant(self):
 def create_openai_thread(self):
     self.thread = self.client.beta.threads.create()
     self.thread_id = self.thread.id
+    self.status_messages = []
     self.message_objects = [self.client.beta.threads.messages.create(
         thread_id=self.thread_id,
         role="assistant",
@@ -48,15 +59,15 @@ def create_openai_thread(self):
 def upload_openai_file(self, file):
     base64_string = file['data']
     # Remove the data:image/png;base64, part if it exists
-    if base64_string.startswith('data:image/png;base64,'):
-        base64_string = base64_string.split(',')[1]
+    extension = base64_string.split(';')[0].split('/')[1]
+    base64_string = base64_string.split(',')[1]
 
     # Decode the base64 string
     binary_data = base64.b64decode(base64_string)
 
     # Create a file-like object from the binary data
     file_like_object = io.BytesIO(binary_data)
-    file_like_object.name = 'image.png'  # Important to set a name attribute with the correct extension
+    file_like_object.name = 'image.' + extension  # Important to set a name attribute with the correct extension
 
     openai_file_ref = self.client.files.create(file=file_like_object, purpose="vision")
     print(openai_file_ref)
@@ -122,6 +133,10 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
             json_args = json.loads(tool.function.arguments)
             function_name = tool.function.name
             if function_name in globals():
+                self.assistant.status_messages.append({
+                    "timestamp": datetime.now().timestamp(),
+                    "message": f"[EVENT] Running {function_name} with arguments: {json_args}"
+                })
                 function = globals()[function_name]
                 result = function(**json_args)
                 tool_outputs.append({"tool_call_id": tool.id, "output": result})

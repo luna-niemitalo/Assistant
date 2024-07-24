@@ -24,7 +24,7 @@ def createGoogleCredentials():
                 return {"status": "error", "message": str(e)}
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                os.path.join(os.environ["CONFIG_PATH"] + "credentials.json"), SCOPES
+                os.path.join(os.environ["CONFIG_PATH"], "credentials.json"), SCOPES
             )
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
