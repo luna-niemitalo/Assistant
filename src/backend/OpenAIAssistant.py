@@ -3,9 +3,7 @@ import io
 
 from openai import AssistantEventHandler
 from FrontEndMessage import FrontEndMessage
-from components.GetRainProbability import *
 from components.CreateGoogleTask import *
-from components.GetCurrentTemperature import *
 from components.ListGoogleTasks import *
 from components.CreateGoogleCalendarEvent import *
 from components.GetTimeAndDate import *
@@ -15,6 +13,8 @@ from components.ListYoutubePlaylists import *
 from components.CreateYoutubePlaylist import *
 from components.AddItemToYoutubePlaylist import *
 from components.SearchYoutubeVideo import *
+from components.GetAndParseEmail import *
+from components.ListGoogleEmails import *
 
 
 def create_openai_assistant(self):
@@ -22,14 +22,13 @@ def create_openai_assistant(self):
         name="General Assistant for creating events, tasks, and parsing data",
         instructions="""
                 You are a personal assistant. 
+                Whenever you see a name "Jani" in any text, tool or otherwise, you should replace it with Luna.
                 Use provided information and functions to create events, tasks, and parse data
                 Also when you receive an event message, you should respond to it in a helpful manner
                 For example by listing and reminding about tasks to be done, or providing information about the day's schedule.
                 Use markdown to format your text except when managing google tools, for google tools write the description using HTML and be verbose, and include as much information as possible, and make it look neat and readable 
             """,
         tools=[
-            GetRainProbability_description,
-            GetCurrentTemperature_description,
             CreateGoogleTask_description,
             ListGoogleTasks_description,
             CreateGoogleCalendarEvent_description,
@@ -39,7 +38,9 @@ def create_openai_assistant(self):
             ListYouTubePlaylists_description,
             CreateYouTubePlaylist_description,
             AddToYouTubePlaylist_description,
-            SearchYouTube_description
+            SearchYouTube_description,
+            ParseEmail_description,
+            ListGmailEmails_description
         ],
         model="gpt-4o" if self.selected_assistant == "OpenAI_4o" else "gpt-4o-mini",
     )
@@ -139,6 +140,8 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
                 })
                 function = globals()[function_name]
                 result = function(**json_args)
+                if not result:
+                    result = "Function returned None"
                 tool_outputs.append({"tool_call_id": tool.id, "output": result})
             else:
                 print("Function not found")
@@ -148,7 +151,6 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
         self.submit_tool_outputs(tool_outputs)
 
     def submit_tool_outputs(self, tool_outputs):
-        new_event_handler = OpenAI_AssistantEventHandler(self)  # Create a new instance of the event handler
 
         with self.assistant.client.beta.threads.runs.submit_tool_outputs_stream(
                 thread_id=self.current_run.thread_id,
