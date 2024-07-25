@@ -15,7 +15,7 @@
       <span>Thread ID: {{ thread_id }}</span>
       <div class="thread_controls">
         <font-awesome-icon icon="plus" @click="newThread" />
-        <font-awesome-icon icon="sync" @click="$emit('initialize')" />
+        <font-awesome-icon icon="sync" @click="$emit('forceUpdate')" />
       </div>
     </div>
   </div>
@@ -77,7 +77,6 @@ export default defineComponent({
       const response = await fetch(this.url + "/thread/new", {
         method: "POST",
       });
-      this.$emit("initialize");
     },
   },
 });

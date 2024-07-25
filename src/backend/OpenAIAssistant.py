@@ -1,5 +1,6 @@
 import base64
 import io
+import json
 
 from openai import AssistantEventHandler
 from FrontEndMessage import FrontEndMessage
@@ -15,6 +16,9 @@ from components.AddItemToYoutubePlaylist import *
 from components.SearchYoutubeVideo import *
 from components.GetAndParseEmail import *
 from components.ListGoogleEmails import *
+from components.SaveImportantInfo import *
+from components.GoogleSearch import *
+from src.backend.components.SaveImportantInfo import load_user_info
 
 entries = []
 
@@ -41,43 +45,62 @@ def replay_from_json_file(filename):
         for entry in entries:
             print(f"Parameter: {entry['parameter']}, Timestamp: {entry['timestamp']}")
 def create_openai_assistant(self):
-    self.assistant = self.client.beta.assistants.create(
-        name="General Assistant for creating events, tasks, and parsing data",
-        instructions="""
-                You are a personal assistant. 
-                Whenever you see a name "Jani" in any text, tool or otherwise, you should replace it with Luna.
-                Use provided information and functions to create events, tasks, and parse data
-                Also when you receive an event message, you should respond to it in a helpful manner
+    user_info = load_user_info()
+    instructions = f"""
+                You are a personal assistant.
+                
+
+                Immediate Recognition: As soon as user mentions a new person, event, artist, topic, or any interest, You'll recognize it as potential information to save.
+            
+                Instant Action: You will immediately use the save information tool to record this new interest or preference without delaying it until the end of the task or conversation.
+            
+                Verification: I will confirm with you that the information has been saved correctly, ensuring transparency and accuracy.
+
+                Greet the user politely and ask how you can help them.
+                
+                Use provided information and tools to fullill the user's requests.
+                
                 For example by listing and reminding about tasks to be done, or providing information about the day's schedule.
+                
                 Use markdown to format your text except when managing google tools, for google tools write the description using HTML and be verbose, and include as much information as possible, and make it look neat and readable 
-            """,
-        tools=[
-            CreateGoogleTask_description,
-            ListGoogleTasks_description,
-            CreateGoogleCalendarEvent_description,
-            GetCurrentTimeAndDate_description,
-            GetGoogleCalendarEvents_description,
-            ParseWebsite_description,
-            ListYouTubePlaylists_description,
-            CreateYouTubePlaylist_description,
-            AddToYouTubePlaylist_description,
-            SearchYouTube_description,
-            ParseEmail_description,
-            ListGmailEmails_description
-        ],
-        model="gpt-4o" if self.selected_assistant == "OpenAI_4o" else "gpt-4o-mini",
-    )
+            """
+    instructions += "USER INFORMATION: " + json.dumps(user_info, indent=4)
+    try:
+        self.assistant = self.client.beta.assistants.create(
+            name="General Assistant for creating events, tasks, and parsing data",
+            instructions=instructions,
+            tools=[
+                CreateGoogleTask_description,
+                ListGoogleTasks_description,
+                CreateGoogleCalendarEvent_description,
+                GetCurrentTimeAndDate_description,
+                GetGoogleCalendarEvents_description,
+                ParseWebsite_description,
+                ListYouTubePlaylists_description,
+                CreateYouTubePlaylist_description,
+                AddToYouTubePlaylist_description,
+                SearchYouTube_description,
+                ParseEmail_description,
+                ListGmailEmails_description,
+                SaveANoteAboutUser,
+                UpdateUserInformation_description,
+                GooogleSearch_description
+            ],
+            model="gpt-4o" if self.selected_assistant == "OpenAI_4o" else "gpt-4o-mini",
+        )
+    except Exception as e:
+        self.assistant.status_messages.append({
+            "timestamp": datetime.now().timestamp(),
+            "message": f"Error creating assistant: {e}"
+        })
+        return None
 
 
 def create_openai_thread(self):
     self.thread = self.client.beta.threads.create()
     self.thread_id = self.thread.id
     self.status_messages = []
-    self.message_objects = [self.client.beta.threads.messages.create(
-        thread_id=self.thread_id,
-        role="assistant",
-        content="Hello, how can I help you today?"
-    )]
+    self.message_objects = []
 
 
 def upload_openai_file(self, file):

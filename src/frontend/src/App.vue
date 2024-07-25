@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <HeaderComponent :url="url" @initialize="initialize" />
+    <HeaderComponent :url="url" @forceUpdate="forceUpdate" />
     <ChatDisplay :messages="messages" :status_messages="status_messages" />
     <chat-input @new-message="handleNewUserMessage" />
   </div>
@@ -87,10 +87,15 @@ export default defineComponent({
         console.log("Received message");
         const serverMessages = JSON.parse(event.data);
         console.log(serverMessages);
+        this.messages = {};
         for (const serverMessage of serverMessages) {
           this.messages[serverMessage.id] = serverMessage;
         }
       };
+    },
+
+    forceUpdate: function () {
+      fetch(this.url + "/force_update");
     },
 
     handleNewUserMessage: async function (message: Message) {
@@ -102,6 +107,7 @@ export default defineComponent({
         },
         body: JSON.stringify(message),
       });
+      console.log(response);
       const serverMessage: ServerMessage = await response.json();
       if (serverMessage.id) {
         this.messages[serverMessage.id] = serverMessage;

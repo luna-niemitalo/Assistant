@@ -111,8 +111,14 @@ def messages_thread_id():
 
 @app.route('/api/thread/new', methods=['POST'])
 def new_thread():
-    print("New thread")
-    return assistant.new_thread()
+    result = assistant.new_thread()
+    assistant.force_update = True
+    return result
+
+@app.route('/api/force_update', methods=['GET'])
+def force_update():
+    assistant.force_update = True
+    return jsonify({"status": "success"})
 
 
 @app.route('/api/assistant', methods=['GET'])

@@ -31,6 +31,7 @@ class Assistant:
             )
             create_openai_thread(self)
             create_openai_assistant(self)
+            self.run_ai()
 
     def get_openai_image(self, image_id):
         file = self.client.files.retrieve(file_id=image_id)
@@ -73,6 +74,7 @@ class Assistant:
     def new_thread(self):
         if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_4o_mini":
             create_openai_thread(self)
+            self.run_ai()
             return self.thread_id
 
     def run_ai(self):
