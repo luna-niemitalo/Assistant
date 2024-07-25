@@ -36,8 +36,10 @@ def messages():
         prev_length = 0
         while True:
             fem = assistant.get_messages()
-            if len(fem) != prev_length:
+            force_update = assistant.get_force_update()
+            if len(fem) != prev_length or force_update:
                 yield f"data: {json.dumps([message.get_fem() for message in fem])}\n\n"
+                assistant.force_update = False
                 prev_length = len(fem)
             time.sleep(0.1)
 

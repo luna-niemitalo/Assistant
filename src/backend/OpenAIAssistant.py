@@ -16,7 +16,30 @@ from components.SearchYoutubeVideo import *
 from components.GetAndParseEmail import *
 from components.ListGoogleEmails import *
 
+entries = []
 
+def save_entry(parameter):
+    """Saves the parameter and the current timestamp to the entries list."""
+    timestamped_entry = {
+        'parameter': parameter,
+        'timestamp': datetime.now().isoformat()
+    }
+    entries.append(timestamped_entry)
+    print(f"Saved entry: {timestamped_entry}")
+
+def save_to_json_file(filename):
+    """Saves the entries list to a JSON file."""
+    with open(filename, 'w') as file:
+        json.dump(entries, file, indent=4)
+    print(f"Saved entries to {filename}")
+
+def replay_from_json_file(filename):
+    """Reads from a JSON file and replays the saved entries."""
+    global entries
+    with open(filename, 'r') as file:
+        entries = json.load(file)
+        for entry in entries:
+            print(f"Parameter: {entry['parameter']}, Timestamp: {entry['timestamp']}")
 def create_openai_assistant(self):
     self.assistant = self.client.beta.assistants.create(
         name="General Assistant for creating events, tasks, and parsing data",
@@ -105,6 +128,12 @@ def deconstruct_openai_message(message):
     return result
 
 
+def handleStreamingAudio(audio):
+    audio_data = base64.b64decode(audio)
+    with open("audio.wav", "wb") as f:
+        f.write(audio_data)
+    return "Audio received"
+
 class OpenAI_AssistantEventHandler(AssistantEventHandler):
     def __init__(self, assistant):
         super().__init__()
@@ -118,6 +147,7 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
             for message in self.assistant.message_objects:
                 if message.id == event.data.id:
                     message.content = event.data.content
+                    self.assistant.force_update = True
                     break
         elif event.event == "thread.message.delta":
             new_message = {
@@ -140,6 +170,10 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
                 })
                 function = globals()[function_name]
                 result = function(**json_args)
+                self.assistant.status_messages.append({
+                    "timestamp": datetime.now().timestamp(),
+                    "message": f"[EVENT] {function_name} returned: {result}"
+                })
                 if not result:
                     result = "Function returned None"
                 tool_outputs.append({"tool_call_id": tool.id, "output": result})
@@ -161,3 +195,13 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
             for text in stream.text_deltas:
                 print(text, end="", flush=True)
             print()
+
+    def streamAudio(self):
+        response = self.assistant.client.audio.speech.create(
+            model="tts-1",
+            voice="alloy",
+            input="Hello world! This is a streaming test.",
+            response_format="opus",
+        )
+
+        response.stream_to_file("output.mp3")

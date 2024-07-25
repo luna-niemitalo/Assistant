@@ -19,6 +19,7 @@ class Assistant:
         self.thread_id = None
         self.thread = None
         self.assistant = None
+        self.force_update = False
         self.selected_assistant = assistant
         if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_4o_mini":
             self.event_handler = OpenAI_AssistantEventHandler(self)
@@ -65,6 +66,9 @@ class Assistant:
                 results.append(fe_message)
 
         return results
+
+    def get_force_update(self):
+        return self.force_update
 
     def new_thread(self):
         if self.selected_assistant == "OpenAI_4o" or self.selected_assistant == "OpenAI_4o_mini":
