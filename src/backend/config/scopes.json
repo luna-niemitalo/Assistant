@@ -3,5 +3,6 @@
   "https://www.googleapis.com/auth/calendar",
   "https://www.googleapis.com/auth/youtube",
   "https://www.googleapis.com/auth/gmail.readonly",
-  "https://www.googleapis.com/auth/drive.appfolder"
+  "https://www.googleapis.com/auth/drive.appdata"
 ]
+
