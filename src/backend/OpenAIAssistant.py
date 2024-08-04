@@ -170,7 +170,7 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
             for message in self.assistant.message_objects:
                 if message.id == event.data.id:
                     message.content = event.data.content
-                    self.assistant.force_update = True
+                    self.assistant.set_force_update()
                     break
         elif event.event == "thread.message.delta":
             new_message = {

@@ -34,12 +34,12 @@ def messages():
     def event_stream():
 
         prev_length = 0
+        force_update = assistant.get_force_update()
         while True:
             fem = assistant.get_messages()
-            force_update = assistant.get_force_update()
-            if len(fem) != prev_length or force_update:
+            if len(fem) != prev_length or force_update["messages"]:
                 yield f"data: {json.dumps([message.get_fem() for message in fem])}\n\n"
-                assistant.force_update = False
+                force_update["messages"] = False
                 prev_length = len(fem)
             time.sleep(0.1)
 
@@ -50,12 +50,14 @@ def messages():
 def status_stream():
     def event_stream():
         old_len = 0
+        force_update = assistant.get_force_update()
         while True:
-            if len(assistant.status_messages) > old_len:
+            if len(assistant.status_messages) > old_len or force_update["status"]:
                 old_len = len(assistant.status_messages)
+                force_update["status"] = False
                 yield f"data: {json.dumps(assistant.status_messages)}\n\n"
             else:
-                time.sleep(0.3)
+                time.sleep(0.1)
 
     return Response(event_stream(), mimetype="text/event-stream")
 
@@ -112,12 +114,12 @@ def messages_thread_id():
 @app.route('/api/thread/new', methods=['POST'])
 def new_thread():
     result = assistant.new_thread()
-    assistant.force_update = True
+    assistant.set_force_update()
     return result
 
 @app.route('/api/force_update', methods=['GET'])
 def force_update():
-    assistant.force_update = True
+    assistant.set_force_update()
     return jsonify({"status": "success"})
 
 
