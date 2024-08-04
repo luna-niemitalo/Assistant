@@ -65,7 +65,7 @@ def load_user_info():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as file:
             return file.read()
-    return {}
+    return ""
 
 def save_user_info_to_file(data):
     DATA_FILE = os.path.join(os.environ["CONFIG_PATH"], "user_info.txt")
