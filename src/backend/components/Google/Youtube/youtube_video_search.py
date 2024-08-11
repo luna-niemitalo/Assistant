@@ -1,9 +1,11 @@
 import json
 import os.path
-from src.backend.components.CreateGoogleCredentials import createGoogleCredentials
+from src.backend.components.Google.google_credentials_create import createGoogleCredentials
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+from src.backend.components.utils.utils import set_config_path
 
 SearchYouTube_description = {
     "type": "function",
@@ -62,7 +64,7 @@ def search_youtube_video(query, maxResults=5):
         print(err)
 
 if __name__ == "__main__":
-    os.chdir("../config")
-    os.environ["CONFIG_PATH"] = os.getcwd()
+    set_config_path()
+
     videos = search_youtube_video("Python tutorial", maxResults=3)
     print(videos)

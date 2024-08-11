@@ -1,12 +1,13 @@
 import json
 import os.path
-from src.backend.components.CreateGoogleCredentials import createGoogleCredentials
+from src.backend.components.Google.google_credentials_create import createGoogleCredentials
 import base64
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from bs4 import BeautifulSoup
 import re
 
+from src.backend.components.utils.utils import set_config_path
 
 # Function description structure
 ParseEmail_description = {
@@ -91,8 +92,8 @@ def parse_email(emailId):
         return json.dumps({"subject": "[ERROR]", "content": err})
 
 if __name__ == "__main__":
-    os.chdir("../config")
-    os.environ["CONFIG_PATH"] = os.getcwd()
+    set_config_path()
+
     # Example usage with an email ID
     email_id = "190bf8b6fe4a2ba8"
     result = parse_email(email_id)

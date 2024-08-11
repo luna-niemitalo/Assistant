@@ -1,24 +1,30 @@
 import base64
 import io
 import json
+import time
+from datetime import datetime
 
 from openai import AssistantEventHandler
 from FrontEndMessage import FrontEndMessage
-from components.CreateGoogleTask import *
-from components.ListGoogleTasks import *
-from components.CreateGoogleCalendarEvent import *
-from components.GetTimeAndDate import *
-from components.ListGoogleCalendarEvents import *
-from components.ParseWebsite import *
-from components.ListYoutubePlaylists import *
-from components.CreateYoutubePlaylist import *
-from components.AddItemToYoutubePlaylist import *
-from components.SearchYoutubeVideo import *
-from components.GetAndParseEmail import *
-from components.ListGoogleEmails import *
-from components.SaveImportantInfo import *
-from components.GoogleSearch import *
-from src.backend.components.SaveImportantInfo import load_user_info
+from src.backend.components.utils.utils import get_current_time_and_date, load_user_info
+
+from components.Google.Tasks.google_task_create import *
+from components.Google.Drive.read_google_drive_file import *
+from components.Google.Tasks.google_tasks_list import *
+from components.Google.Calendar.google_calendar_event_create import *
+from components.Google.Calendar.google_calendar_events_list import *
+from components.website_parse import *
+from components.Google.Youtube.youtube_playlist_list import *
+from components.Google.Youtube.youtube_playlist_create import *
+from components.Google.Youtube.youtube_playlist_add_item import *
+from components.Google.Youtube.youtube_video_search import *
+from components.Google.Gmail.email_get_and_parse import *
+from components.Google.Gmail.email_list_google import *
+from components.FilesystemOperations.file_list import *
+from components.FilesystemOperations.file_read import *
+from components.FilesystemOperations.file_write import *
+from components.FilesystemOperations.file_delete import *
+#from components.search_google import *
 
 entries = []
 
@@ -26,7 +32,7 @@ def save_entry(parameter):
     """Saves the parameter and the current timestamp to the entries list."""
     timestamped_entry = {
         'parameter': parameter,
-        'timestamp': datetime.now().isoformat()
+        'timestamp': time.time_ns()
     }
     entries.append(timestamped_entry)
     print(f"Saved entry: {timestamped_entry}")
@@ -47,8 +53,7 @@ def replay_from_json_file(filename):
 def create_openai_assistant(self):
     user_info = load_user_info()
     instructions = f"""
-                You are a personal assistant.
-                
+                You are a personal assistant.                
 
                 Immediate Recognition: As soon as user mentions a new person, event, artist, topic, or any interest, You'll recognize it as potential information to save.
             
@@ -56,15 +61,17 @@ def create_openai_assistant(self):
             
                 Verification: I will confirm with you that the information has been saved correctly, ensuring transparency and accuracy.
 
-                Greet the user politely and ask how you can help them.
+                Greet the user politely and ask how you can help them, while also reminding them of the reminders they might have in the following user information.
                 
                 Use provided information and tools to fullill the user's requests.
-                
-                For example by listing and reminding about tasks to be done, or providing information about the day's schedule.
-                
+                                
                 Use markdown to format your text except when managing google tools, for google tools write the description using HTML and be verbose, and include as much information as possible, and make it look neat and readable 
             """
-    instructions += "USER INFORMATION: " + json.dumps(user_info, indent=4)
+
+    instructions += get_current_time_and_date()
+
+    instructions += "USER INFORMATION: Write all userinfo in .MD files (Path: C:\\dev\\Assistant\\src\\backend\\config\\user_information\\) " + json.dumps(user_info, indent=4)
+
     try:
         self.assistant = self.client.beta.assistants.create(
             name="General Assistant for creating events, tasks, and parsing data",
@@ -73,7 +80,6 @@ def create_openai_assistant(self):
                 CreateGoogleTask_description,
                 ListGoogleTasks_description,
                 CreateGoogleCalendarEvent_description,
-                GetCurrentTimeAndDate_description,
                 GetGoogleCalendarEvents_description,
                 ParseWebsite_description,
                 ListYouTubePlaylists_description,
@@ -82,9 +88,12 @@ def create_openai_assistant(self):
                 SearchYouTube_description,
                 ParseEmail_description,
                 ListGmailEmails_description,
-                SaveANoteAboutUser,
-                UpdateUserInformation_description,
-                GooogleSearch_description
+                #GooogleSearch_description
+                ListFiles_description,
+                ReadFile_description,
+                WriteFile_description,
+                DeleteFile_description,
+                ReadGoogleDriveFile_description
             ],
             model="gpt-4o" if self.selected_assistant == "OpenAI_4o" else "gpt-4o-mini",
         )

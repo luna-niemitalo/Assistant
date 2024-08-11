@@ -1,9 +1,11 @@
 import json
 import os.path
 from datetime import datetime, timedelta
-from src.backend.components.CreateGoogleCredentials import createGoogleCredentials
+from src.backend.components.Google.google_credentials_create import createGoogleCredentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+from src.backend.components.utils.utils import set_config_path
 
 GetGoogleCalendarEvents_description = {
     "type": "function",
@@ -86,10 +88,8 @@ def get_google_calendar_events(calendar_id, time_min=None, time_max=None):
 
 
 if __name__ == "__main__":
-
-    os.chdir("../config")
-    os.environ["CONFIG_PATH"] = os.getcwd()
+    set_config_path()
     event_list = get_google_calendar_events(
-        calendar_id='luna.niemitalo@refined.com'
+        calendar_id='luna.niemitalo@gmail.com'
     )
-    #print(event_list)
+    print(event_list)

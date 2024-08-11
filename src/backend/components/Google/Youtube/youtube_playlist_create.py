@@ -1,9 +1,11 @@
 import json
 import os.path
-from src.backend.components.CreateGoogleCredentials import createGoogleCredentials
+from src.backend.components.Google.google_credentials_create import createGoogleCredentials
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+from src.backend.components.utils.utils import set_config_path
 
 CreateYouTubePlaylist_description = {
     "type": "function",
@@ -66,7 +68,7 @@ def create_youtube_playlist(title, description):
         print(err)
 
 if __name__ == "__main__":
-    os.chdir("../config")
-    os.environ["CONFIG_PATH"] = os.getcwd()
+    set_config_path()
+
     new_playlist = create_youtube_playlist("My Awesome Playlist", "A collection of my favorite videos.")
     print(new_playlist)

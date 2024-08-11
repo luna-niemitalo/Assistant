@@ -50,7 +50,7 @@ export default defineComponent({
     get_status_messages() {
       const eventSource = new EventSource(this.url + "/status");
       eventSource.onmessage = (event) => {
-        console.log("Status message");
+        console.log("Status message", JSON.parse(event.data));
         const status_messages: StatusMessage[] = JSON.parse(event.data);
         console.log(status_messages);
         this.status_messages = status_messages;
@@ -100,7 +100,7 @@ export default defineComponent({
 
     handleNewUserMessage: async function (message: Message) {
       console.log(message);
-      const response = await fetch(this.url + "/message", {
+      const response = await fetch(this.url + "/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

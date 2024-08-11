@@ -68,13 +68,13 @@ export default defineComponent({
       this.$emit("initialize");
     },
     get_thread_id: async function () {
-      const eventSource = new EventSource(this.url + "/thread/id");
+      const eventSource = new EventSource(this.url + "/thread");
       eventSource.onmessage = (event) => {
         this.thread_id = event.data;
       };
     },
     newThread: async function () {
-      const response = await fetch(this.url + "/thread/new", {
+      const response = await fetch(this.url + "/thread", {
         method: "POST",
       });
     },

@@ -18,6 +18,7 @@ for (const icon of Object.values(faBrands)) {
     library.add(icon as IconDefinition);
   }
 }
+
 for (const icon of Object.values(faSolid)) {
   if (icon.hasOwnProperty("iconName")) {
     library.add(icon as IconDefinition);

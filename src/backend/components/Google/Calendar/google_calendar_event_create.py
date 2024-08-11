@@ -1,8 +1,10 @@
 import json
 import os.path
-from src.backend.components.CreateGoogleCredentials import createGoogleCredentials
+from src.backend.components.Google.google_credentials_create import createGoogleCredentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+from src.backend.components.utils.utils import set_config_path
 
 CreateGoogleCalendarEvent_description = {
     "type": "function",
@@ -70,9 +72,7 @@ def create_google_calendar_event(summary, start, end, location=None, description
 
 
 if __name__ == "__main__":
-
-    os.chdir("../config")
-    os.environ["CONFIG_PATH"] = os.getcwd()
+    set_config_path()
     event = create_google_calendar_event(
         summary="Sample Event",
         location="800 Howard St., San Francisco, CA 94103",
