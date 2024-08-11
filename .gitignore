@@ -3,3 +3,5 @@
 /src/backend/config/credentials.json
 /src/backend/models/
 /src/backend/config/user_information/
+**/AI_write_backups/**
+**/.idea/**
