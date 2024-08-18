@@ -6,7 +6,7 @@ from datetime import datetime
 
 from openai import AssistantEventHandler
 from FrontEndMessage import FrontEndMessage
-from src.backend.components.utils.utils import get_current_time_and_date, load_user_info
+from components.utils.utils import get_current_time_and_date, load_user_info
 
 from components.Google.Tasks.google_task_create import *
 from components.Google.Drive.read_google_drive_file import *

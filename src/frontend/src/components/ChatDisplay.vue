@@ -1,12 +1,13 @@
 <template>
-  <div class="chat_display">
+  <div class="chat_display" ref="chatDisplay" @scroll="handleScroll">
     <div v-for="message in sorted_and_merged_messages" :key="message.timestamp">
       <ChatMessage :message="message" />
     </div>
   </div>
 </template>
+
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, ref, nextTick } from "vue";
 import ChatMessage, {
   ServerMessage,
   StatusMessage,
@@ -24,6 +25,27 @@ export default defineComponent({
       required: true,
     },
   },
+  data: function () {
+    return {
+      chatDisplay: ref<HTMLDivElement | null>(null),
+      scrollTop: 0,
+      clientHeight: 0,
+      scrollHeight: 0,
+    };
+  },
+  mounted() {
+    this.chatDisplay = this.$refs.chatDisplay as HTMLDivElement;
+    console.log(this.chatDisplay);
+  },
+  watch: {
+    async messages() {
+      await nextTick();
+      console.log("Message watcher");
+      if (this.isScrolledToBottom && this.chatDisplay) {
+        this.scrollTop = this.chatDisplay.scrollHeight;
+      }
+    },
+  },
   computed: {
     sorted_and_merged_messages(): ServerMessage[] {
       const messages = Object.values(this.messages);
@@ -38,6 +60,28 @@ export default defineComponent({
       );
       const all_messages = messages.concat(status_messages);
       return all_messages.sort((a, b) => a.timestamp - b.timestamp);
+    },
+    isScrolledToBottom(): boolean {
+      console.log(
+        "IscScrolledTobottom",
+        this.scrollTop,
+        " : ",
+        this.clientHeight,
+        " : ",
+        this.scrollHeight,
+        " : Math result: ",
+        this.scrollHeight - (this.scrollTop + this.clientHeight)
+      );
+      return this.scrollHeight - (this.scrollTop + this.clientHeight) < 1;
+    },
+  },
+  methods: {
+    handleScroll() {
+      if (this.chatDisplay) {
+        this.scrollTop = this.chatDisplay.scrollTop;
+        this.clientHeight = this.chatDisplay.clientHeight;
+        this.scrollHeight = this.chatDisplay.scrollHeight;
+      }
     },
   },
 });

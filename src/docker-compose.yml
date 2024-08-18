@@ -1,0 +1,58 @@
+version: '2'
+services:
+    frontend:
+        build: ./frontend
+        container_name: assistant-frontend
+        restart: unless-stopped
+        working_dir: /app
+        volumes:
+            - ./frontend:/app  # Mounting the frontend source code
+        ports:
+            - "8080:8080"  # Expose port for the frontend
+        #command: npm run serve  # Command to run the Vue.js app
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.assistant-frontend.entrypoints=websecure
+            - traefik.http.routers.assistant-frontend.rule=Host(`assistant.itgg.fi`)
+        networks:
+            - default
+            - web
+
+    backend:
+        container_name: assistant-backend
+        build: ./backend
+        volumes:
+            - ./backend:/app  # Mount the entire backend folder into the container
+        ports:
+            - "5000:5000" # Map the container port to the host
+        environment:
+            - ENV_VAR=example_value # If you have any environment variables
+        command: python -u app.py
+        restart: unless-stopped
+        working_dir: /app
+        networks:
+            - default
+            - web
+        depends_on:
+            - db
+    db:
+        image: mariadb:10-focal
+        container_name: assistant-db
+        restart: unless-stopped
+        ports:
+            - "3306:3306"  # Expose port for the frontend
+        environment:
+            - "MYSQL_DATABASE=discord"
+            - "MYSQL_ROOT_PASSWORD=topkek"
+            - "MYSQL_USER=top"
+            - "MYSQL_PASSWORD=kek"
+        volumes:
+            - /home/aqua/discord/mysql:/var/lib/mysql
+        networks:
+            - default
+
+networks:
+    default:
+    web:
+        external:
+            name: web

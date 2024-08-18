@@ -24,6 +24,7 @@
 import AssistantSelector from "@/components/AssistantSelector.vue";
 import ThemeSelector from "@/components/ThemeSelector.vue";
 import { defineComponent } from "vue";
+import { buildApiUrl } from "@/utils";
 
 export default defineComponent({
   name: "HeaderComponent",
@@ -49,7 +50,7 @@ export default defineComponent({
   },
   methods: {
     get_assistant_selection: async function () {
-      const response = await fetch(this.url + "/assistant");
+      const response = await fetch(buildApiUrl("assistant"));
       const data = await response.json();
       console.log(data);
       this.assistant_selection = data;
@@ -57,7 +58,7 @@ export default defineComponent({
     async assistantChanged(assistant: Event) {
       const target = assistant.target as HTMLSelectElement;
       console.log(target.value);
-      await fetch(this.url + "/assistant", {
+      await fetch(buildApiUrl("assistant"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -68,13 +69,13 @@ export default defineComponent({
       this.$emit("initialize");
     },
     get_thread_id: async function () {
-      const eventSource = new EventSource(this.url + "/thread");
+      const eventSource = new EventSource(buildApiUrl("thread"));
       eventSource.onmessage = (event) => {
         this.thread_id = event.data;
       };
     },
     newThread: async function () {
-      const response = await fetch(this.url + "/thread", {
+      await fetch(buildApiUrl("thread"), {
         method: "POST",
       });
     },

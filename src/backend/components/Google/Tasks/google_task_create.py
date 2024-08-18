@@ -3,8 +3,8 @@ import os
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from src.backend.components.Google.google_credentials_create import createGoogleCredentials
-from src.backend.components.utils.utils import set_config_path
+from components.Google.google_credentials_create import createGoogleCredentials
+from components.utils.utils import set_config_path
 
 # If modifying these scopes, delete the file token.json.
 CreateGoogleTask_description = {

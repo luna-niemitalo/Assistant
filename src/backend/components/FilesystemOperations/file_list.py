@@ -26,9 +26,10 @@ def list_files(directory):
         return json.dumps({"error": f"{directory} is not a valid directory."})
 
     file_structure = {}
-
+    exclude = {'node_modules', 'venv', '.git', '__pycache__', 'AI_write_backups'}
     # Walk through the directory tree
     for root, dirs, files in os.walk(directory):
+        dirs[:] = [d for d in dirs if d not in exclude]
         # Normalize the path for system agnostic format
         relative_path = os.path.relpath(root, directory)
         file_structure[relative_path] = files
@@ -37,7 +38,7 @@ def list_files(directory):
     return json.dumps(file_structure, indent=2)
 
 if __name__ == "__main__":
-    str_path = "C:/dev/Assistant/src/backend/components"
+    str_path = "C:/dev/Assistant/src"
     path = Path(str_path)
     file_structure = list_files(str_path)
     print(file_structure)

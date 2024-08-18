@@ -1,7 +1,11 @@
 openai
 Flask
+pytz
+selenium
+beautifulsoup4
+tiktoken
 flask-cors
+waitress
 google-auth
 google-auth-oauthlib
 google-api-python-client
-realtimetts[all]

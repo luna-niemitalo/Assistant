@@ -10,6 +10,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { CustomImage } from "./ChatMessage.vue";
+import { buildApiUrl } from "@/utils";
 
 type ServerImage_stump = {
   file_id: string;
@@ -53,7 +54,7 @@ export default defineComponent({
     load_image: async function (image: ServerImage_stump) {
       try {
         const response = await fetch(
-          this.url + "/open_ai_image?image_id=" + image.file_id
+          buildApiUrl("open_ai_image?image_id=" + image.file_id)
         );
 
         if (!response.ok) {

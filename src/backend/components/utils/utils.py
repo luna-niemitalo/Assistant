@@ -35,18 +35,8 @@ def set_config_path():
     # Get the current working directory
     cwd = os.getcwd()
 
-    # Find the base path "src\backend"
-    backend_index = cwd.find("src\\backend")
-
-    if backend_index == -1:
-        print("The path 'src\\backend' was not found in the current working directory.")
-        return
-
-    # Get the path up to "src\backend"
-    base_path = cwd[:backend_index + len("src\\backend")]
-
     # Join with "config" to set the full config path
-    config_path = os.path.join(base_path, "config")
+    config_path = os.path.join(cwd, "config")
 
     # Set the environment variable
     os.environ["CONFIG_PATH"] = config_path

@@ -16,6 +16,7 @@ import {
   StatusMessage,
 } from "@/components/ChatMessage.vue";
 import HeaderComponent from "@/components/HeaderComponent.vue";
+import { buildApiUrl } from "@/utils";
 
 type Data = {
   messages: {
@@ -48,7 +49,7 @@ export default defineComponent({
   },
   methods: {
     get_status_messages() {
-      const eventSource = new EventSource(this.url + "/status");
+      const eventSource = new EventSource(buildApiUrl("status"));
       eventSource.onmessage = (event) => {
         console.log("Status message", JSON.parse(event.data));
         const status_messages: StatusMessage[] = JSON.parse(event.data);
@@ -56,8 +57,8 @@ export default defineComponent({
         this.status_messages = status_messages;
       };
     },
-    messageStream: async function () {
-      const eventSource = new EventSource(this.url + "/message/stream");
+    messageStream: function () {
+      const eventSource = new EventSource(buildApiUrl("message/stream"));
       eventSource.onmessage = (event) => {
         const parsed = JSON.parse(event.data);
         const localEvent = this.messages[parsed.id];
@@ -81,8 +82,8 @@ export default defineComponent({
       this.messages = {};
       this.status_messages = [];
     },
-    fetchData: async function () {
-      const eventSource = new EventSource(this.url + "/messages");
+    fetchData: function () {
+      const eventSource = new EventSource(buildApiUrl("messages"));
       eventSource.onmessage = (event) => {
         console.log("Received message");
         const serverMessages = JSON.parse(event.data);
@@ -95,12 +96,12 @@ export default defineComponent({
     },
 
     forceUpdate: function () {
-      fetch(this.url + "/force_update");
+      fetch(buildApiUrl("force_update"));
     },
 
     handleNewUserMessage: async function (message: Message) {
       console.log(message);
-      const response = await fetch(this.url + "/messages", {
+      const response = await fetch(buildApiUrl("messages"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

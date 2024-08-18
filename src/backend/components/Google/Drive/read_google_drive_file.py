@@ -2,12 +2,12 @@ import json
 import os.path
 import re
 import io
-from src.backend.components.Google.google_credentials_create import createGoogleCredentials
+from components.Google.google_credentials_create import createGoogleCredentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 
-from src.backend.components.utils.utils import set_config_path
+from components.utils.utils import set_config_path
 
 # Function description for reading a file from Google Drive
 ReadGoogleDriveFile_description = {
@@ -28,10 +28,17 @@ ReadGoogleDriveFile_description = {
     },
 }
 
-def extract_file_id(file_url):
-    """Extract the file ID from a Google Drive URL."""
-    match = re.search(r'drive\.google\.com/file/d/([^/]+)', file_url)
-    return match.group(1) if match else None
+
+def extract_file_id(url):
+    # Split the URL by the '/' character
+    parts = url.split('/')
+
+    # Iterate through the parts to find 'd' and get the next part
+    for i, part in enumerate(parts):
+        if part == 'd' and (i + 1) < len(parts):
+            return parts[i + 1]  # Return the part following 'd'
+
+    return None  # Return None if 'd' is not found
 
 def read_google_drive_file(file_url):
     """Download a file from Google Drive and return its content."""
@@ -48,18 +55,20 @@ def read_google_drive_file(file_url):
     try:
         service = build("drive", "v3", credentials=creds)
 
-        # Request to get the file
-        request = service.files().get_media(fileId=file_id)
-        file_stream = io.BytesIO()
-        downloader = MediaIoBaseDownload(file_stream, request)
 
+        # pylint: disable=maybe-no-member
+        request = service.files().export_media(
+            fileId=file_id, mimeType="text/markdown"
+        )
+        file = io.BytesIO()
+        downloader = MediaIoBaseDownload(file, request)
         done = False
-        while not done:
+        while done is False:
             status, done = downloader.next_chunk()
-            print(f"Download {int(status.progress() * 100)}% complete.")
+            print(f"Download {int(status.progress() * 100)}.")
 
-        file_stream.seek(0)
-        content = file_stream.read()
+
+        content = file.getvalue()
         return content.decode('utf-8')  # Assuming the content is text
 
     except HttpError as err:

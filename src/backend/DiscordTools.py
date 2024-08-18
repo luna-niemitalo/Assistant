@@ -8,7 +8,7 @@ import sqlite3
 import json
 from openai import OpenAI
 
-from src.backend.components.utils.utils import set_config_path
+from components.utils.utils import set_config_path
 
 set_config_path()
 

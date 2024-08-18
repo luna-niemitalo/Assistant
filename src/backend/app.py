@@ -6,8 +6,8 @@ import os
 import json
 from FrontEndMessage import FrontEndMessage
 from Assistant import Assistant
-from src.backend.DiscordTools import getDataUntillTokenLimit, get_db_connection, messages_to_AI_str
-from src.backend.components.utils.utils import set_config_path
+from DiscordTools import getDataUntillTokenLimit, get_db_connection, messages_to_AI_str
+from components.utils.utils import set_config_path
 
 set_config_path()
 
@@ -20,6 +20,11 @@ app = Flask(__name__)
 CORS(app)
 
 assistant = Assistant(assistant_options[1])
+
+@app.route('/', methods=['GET'])
+def default():
+    #Test webserver
+    return jsonify("Hello, World!")
 
 
 @app.route('/api/messages', methods=['GET', 'POST'])
@@ -208,5 +213,9 @@ def get_assistant():
         return jsonify({"selection": assistant.selected_assistant, "options": assistant_options})
 
 
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    print("Starting Flask server...")
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=5000, url_scheme='https')
