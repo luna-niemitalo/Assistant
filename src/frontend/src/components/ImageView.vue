@@ -38,7 +38,7 @@ export default defineComponent({
   data(): Data {
     return {
       image: undefined,
-      url: "http://127.0.0.1:5000/api",
+      url: "http://127.0.0.1:5010/api",
     };
   },
   props: {

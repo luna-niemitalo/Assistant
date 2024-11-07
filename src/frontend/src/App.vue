@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <HeaderComponent :url="url" @forceUpdate="forceUpdate" />
+    <HeaderComponent @forceUpdate="forceUpdate" />
     <ChatDisplay :messages="messages" :status_messages="status_messages" />
     <chat-input @new-message="handleNewUserMessage" />
   </div>
@@ -24,7 +24,6 @@ type Data = {
   };
   serverTime: string;
   thread_id: string;
-  url: string;
   status_messages: StatusMessage[];
 };
 
@@ -40,7 +39,6 @@ export default defineComponent({
       serverTime: "",
       messages: {},
       thread_id: "",
-      url: "http://127.0.0.1:5000/api",
       status_messages: [],
     };
   },

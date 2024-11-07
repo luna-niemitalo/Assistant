@@ -29,12 +29,6 @@ import { buildApiUrl } from "@/utils";
 export default defineComponent({
   name: "HeaderComponent",
   components: { AssistantSelector, ThemeSelector },
-  props: {
-    url: {
-      type: String,
-      required: true,
-    },
-  },
   data() {
     return {
       thread_id: "",

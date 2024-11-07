@@ -51,6 +51,15 @@ def replay_from_json_file(filename):
         for entry in entries:
             print(f"Parameter: {entry['parameter']}, Timestamp: {entry['timestamp']}")
 def create_openai_assistant(self):
+    existing_assistants = self.client.beta.assistants.list()
+    config = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "openai.json")))
+    model_name = ""
+    for assistant in existing_assistants:
+        if config['version'] and self.selected_assistant in assistant.name:
+            self.assistant = self.client.beta.assistants.retrieve(assistant.id)
+            print(f"Found existing assistant: {assistant.name}")
+            return None
+    print("Creating new assistant...")
     user_info = load_user_info()
     instructions = f"""
                 You are a personal assistant.                
@@ -74,7 +83,7 @@ def create_openai_assistant(self):
 
     try:
         self.assistant = self.client.beta.assistants.create(
-            name="General Assistant for creating events, tasks, and parsing data",
+            name="Luna's Assistant " + config['version'] + " : " + self.selected_assistant,
             instructions=instructions,
             tools=[
                 CreateGoogleTask_description,
@@ -95,7 +104,7 @@ def create_openai_assistant(self):
                 DeleteFile_description,
                 ReadGoogleDriveFile_description
             ],
-            model="gpt-4o" if self.selected_assistant == "OpenAI_4o" else "gpt-4o-mini",
+            model="gpt-4o" if self.selected_assistant == "OpenAI_4o_full" else "gpt-4o-mini",
         )
     except Exception as e:
         self.assistant.status_messages.append({

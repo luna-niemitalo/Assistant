@@ -1,4 +1,5 @@
 # app.py
+import flask
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 import time
@@ -14,7 +15,7 @@ set_config_path()
 
 SCOPES = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "scopes.json")))
 
-assistant_options = ["OpenAI_4o", "OpenAI_4o_mini", "LLAMA3"]
+assistant_options = ["OpenAI_4o_full", "OpenAI_4o_mini", "LLAMA3"]
 
 app = Flask(__name__)
 CORS(app)
@@ -88,8 +89,6 @@ def post_message():
             'Access-Control-Allow-Methods': 'GET, POST',
             'Access-Control-Allow-Headers': 'Content-Type',
             'content-type': 'application/json',
-
-
         }
         return Response(status=200, headers=headers)
     conn = get_db_connection()
@@ -202,6 +201,24 @@ def force_update():
     assistant.set_force_update()
     return jsonify({"status": "success"})
 
+@app.route('/api/bottest', methods=['POST', 'OPTIONS'])
+def bot_test():
+    if request.method == 'OPTIONS':
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'content-type': 'application/json',
+        }
+        return Response(status=200, headers=headers)
+
+    if request.method == 'POST':
+        data = request.get_json()
+        print("Received message:", data)
+        return jsonify({"message": "Message received successfully"}), 202
+
+    return jsonify({"message": "Invalid request method"}), 405
+
 
 @app.route('/api/assistant', methods=['GET', 'POST'])
 def get_assistant():
@@ -216,6 +233,4 @@ def get_assistant():
 
 
 if __name__ == '__main__':
-    print("Starting Flask server...")
-    from waitress import serve
-    serve(app, host="0.0.0.0", port=5000, url_scheme='https')
+    app.run(debug=True, port=5010, host='0.0.0.0')
