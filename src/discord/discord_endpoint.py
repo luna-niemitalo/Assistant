@@ -1,15 +1,14 @@
 # discord_endpoint.py
-import mariadb
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
-from waitress.compat import MAXINT
 
-from src.discord.db_handler import get_paginated_data, get_data_by_id
+from src.discord.db_handler import DiscordDBHandler
 
 app = Flask(__name__)
 CORS(app)
 
-conn = None
+
+db_handler = DiscordDBHandler()
 
 @app.route("/", methods=["GET"])
 def hello_world():
@@ -29,7 +28,7 @@ def users():
         return Response(status=200, headers=headers)
     if request.method == "GET":
         from  src.discord.users_handler import get_handler
-        return get_handler(conn, request.args)
+        return get_handler(request.args, db_handler)
     return jsonify({"message": "Not implemented"}), 501
 
 
@@ -46,7 +45,7 @@ def guilds():
         return Response(status=200, headers=headers)
     if request.method == "GET":
         from src.discord.guilds_handler import get_handler
-        return get_handler(conn, request.args)
+        return get_handler(request.args, db_handler)
     return jsonify({"message": "Not implemented"}), 501
 
 
@@ -62,7 +61,11 @@ def channels():
         return Response(status=200, headers=headers)
     if request.method == "GET":
         from src.discord.cannels_handler import get_handler
-        return get_handler(conn, request.args)
+        return get_handler(request.args, db_handler)
+    if request.method == "POST":
+        from src.discord.cannels_handler import post_handler
+        data = request.get_json()
+        return post_handler(data, db_handler)
     return jsonify({"message": "Not implemented"}), 501
 
 
@@ -79,28 +82,15 @@ def messages():
     # Handle GET request to get messages
     if request.method == "GET":
         from src.discord.messages_handler import get_handler
-        return get_handler(conn, request.args)
+        return get_handler(request.args, db_handler)
 
     if request.method == 'POST':
         data = request.get_json()
         from src.discord.messages_handler import post_handler
-        return post_handler(conn, data)
+        return post_handler(data, db_handler)
     return jsonify({"message": "Not implemented"}), 501
 
 
+
 if __name__ == "__main__":
-    # Connect to MariaDB Platform
-    try:
-        conn = mariadb.connect(
-            user="discord_bot",
-            password="976431258",
-            host="ebin.spurdo.us",
-            port=3306,
-            database="discord"
-
-        )
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        exit(1)
-
     app.run(debug=True, port=5020, host='0.0.0.0')
