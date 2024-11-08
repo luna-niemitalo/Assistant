@@ -1,6 +1,7 @@
 from flask import jsonify
 
 from src.discord.db_handler import DiscordDBHandler
+from src.discord.utils import build_db_guild
 
 
 def get_handler(params,  db_handler: DiscordDBHandler):
@@ -13,3 +14,12 @@ def get_handler(params,  db_handler: DiscordDBHandler):
         # Handle GET request to get guilds
         data = db_handler.get_paginated_data( "guilds")
         return jsonify(data)
+
+def post_handler(data, db_handler: DiscordDBHandler):
+    print("Received guild:")
+    print(data)
+    # Insert or update guild data in the database
+    db_guild = build_db_guild(data)
+    db_handler.upsert_data("guilds", db_guild)
+    return jsonify({"message": "Guild received successfully"}), 201
+

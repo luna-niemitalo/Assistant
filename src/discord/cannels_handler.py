@@ -20,7 +20,6 @@ def post_handler(data, db_handler: DiscordDBHandler):
     print(data)
     db_channel = build_db_channel(data)
     # Insert or update channel data in the database
-    result = db_handler.upsert_data("channels", db_channel)
-    print(f"Inserted/updated channel ID: {result}")
+    db_handler.upsert_data("channels", db_channel)
 
     return jsonify({"message": "Channel received successfully"}), 201

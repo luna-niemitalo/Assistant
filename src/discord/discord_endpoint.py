@@ -29,6 +29,10 @@ def users():
     if request.method == "GET":
         from  src.discord.users_handler import get_handler
         return get_handler(request.args, db_handler)
+    if request.method == "POST":
+        from src.discord.users_handler import post_handler
+        data = request.get_json()
+        return post_handler(data, db_handler)
     return jsonify({"message": "Not implemented"}), 501
 
 
@@ -46,6 +50,10 @@ def guilds():
     if request.method == "GET":
         from src.discord.guilds_handler import get_handler
         return get_handler(request.args, db_handler)
+    if request.method == "POST":
+        from src.discord.guilds_handler import post_handler
+        data = request.get_json()
+        return post_handler(data, db_handler)
     return jsonify({"message": "Not implemented"}), 501
 
 

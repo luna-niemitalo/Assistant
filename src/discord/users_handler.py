@@ -1,6 +1,8 @@
 from flask import jsonify
 
 from src.discord.db_handler import DiscordDBHandler
+from src.discord.utils import build_db_user
+
 
 def get_handler(params, db_handler: DiscordDBHandler):
     id = params.get("id", type=int)
@@ -16,3 +18,11 @@ def get_handler(params, db_handler: DiscordDBHandler):
         # Handle GET request to get users
         data = db_handler.get_paginated_data("users", page_size=limit, after=after, has_mutuals=has_mutuals)
         return jsonify(data)
+
+def post_handler(data, db_handler: DiscordDBHandler):
+    print("Received user:")
+    print(data)
+    db_user = build_db_user(data)
+    # Insert or update user data in the database
+    db_handler.upsert_data("users", db_user)
+    return jsonify({"message": "User received successfully"}), 201
