@@ -1,8 +1,8 @@
-# discord_endpoint.py
+# app.py
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 
-from src.discord.db_handler import DiscordDBHandler
+from db_handler import DiscordDBHandler
 
 app = Flask(__name__)
 CORS(app)
@@ -27,10 +27,10 @@ def users():
         }
         return Response(status=200, headers=headers)
     if request.method == "GET":
-        from  src.discord.users_handler import get_handler
+        from  users_handler import get_handler
         return get_handler(request.args, db_handler)
     if request.method == "POST":
-        from src.discord.users_handler import post_handler
+        from users_handler import post_handler
         data = request.get_json()
         return post_handler(data, db_handler)
     return jsonify({"message": "Not implemented"}), 501
@@ -48,10 +48,10 @@ def guilds():
         }
         return Response(status=200, headers=headers)
     if request.method == "GET":
-        from src.discord.guilds_handler import get_handler
+        from guilds_handler import get_handler
         return get_handler(request.args, db_handler)
     if request.method == "POST":
-        from src.discord.guilds_handler import post_handler
+        from guilds_handler import post_handler
         data = request.get_json()
         return post_handler(data, db_handler)
     return jsonify({"message": "Not implemented"}), 501
@@ -68,10 +68,10 @@ def channels():
         }
         return Response(status=200, headers=headers)
     if request.method == "GET":
-        from src.discord.cannels_handler import get_handler
+        from cannels_handler import get_handler
         return get_handler(request.args, db_handler)
     if request.method == "POST":
-        from src.discord.cannels_handler import post_handler
+        from cannels_handler import post_handler
         data = request.get_json()
         return post_handler(data, db_handler)
     return jsonify({"message": "Not implemented"}), 501
@@ -89,12 +89,12 @@ def messages():
         return Response(status=200, headers=headers)
     # Handle GET request to get messages
     if request.method == "GET":
-        from src.discord.messages_handler import get_handler
+        from messages_handler import get_handler
         return get_handler(request.args, db_handler)
 
     if request.method == 'POST':
         data = request.get_json()
-        from src.discord.messages_handler import post_handler
+        from messages_handler import post_handler
         return post_handler(data, db_handler)
     return jsonify({"message": "Not implemented"}), 501
 

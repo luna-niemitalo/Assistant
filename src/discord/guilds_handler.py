@@ -1,7 +1,7 @@
 from flask import jsonify
 
-from src.discord.db_handler import DiscordDBHandler
-from src.discord.utils import build_db_guild
+from db_handler import DiscordDBHandler
+from utils import build_db_guild
 
 
 def get_handler(params,  db_handler: DiscordDBHandler):

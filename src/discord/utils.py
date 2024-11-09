@@ -65,7 +65,6 @@ def build_db_user(data):
     flags = verify_property(data, 'flags')
     accent_color = verify_property(data, 'accentColor')
     bot = verify_property(data, 'bot')
-    system = verify_property(data, 'system')
     bio = verify_property(data, 'bio')
     pronouns = verify_property(data, 'pronouns')
     banner = verify_property(data, 'banner')
@@ -85,7 +84,6 @@ def build_db_user(data):
         'banner': banner,
         'banner_color': banner_color,
         'bot': bot,
-        'system': system,
         'bio': bio,
         'pronouns': pronouns,
         'public_flags': public_flags,

@@ -2,18 +2,18 @@ from flask import jsonify
 import mariadb
 from pypika import Table, Query, Database, Order, MySQLQuery, Parameter
 import json
-
+import os
 
 def create_connection_pool():
     """Creates and returns a Connection Pool"""
 
     # Create Connection Pool
     pool = mariadb.ConnectionPool(
-        user="discord_bot",
-        password="976431258",
-        host="ebin.spurdo.us",
+        user=os.environ['MYSQL_DISCORD_USER'],
+        password=os.environ['MYSQL_DISCORD_PASSWORD'],
+        host=os.environ['MYSQL_DISCORD_HOST'],
         port=3306,
-        database="discord",
+        database=os.environ['MYSQL_DISCORD_DATABASE'],
         pool_name="web-app",
         pool_size=20,
         pool_validation_interval=250)
@@ -65,6 +65,7 @@ def serialize_value(value):
 
 class DiscordDBHandler:
     def __init__(self):
+        print("Initializing DiscordDBHandler")
         self.conn_pool = create_connection_pool()
 
     def check_existing_item(self, t, item_id):
