@@ -5,3 +5,4 @@
 /src/backend/config/user_information/
 **/AI_write_backups/**
 **/.idea/**
+/src/backend/config/openai.json
