@@ -109,6 +109,22 @@ The application fetches data and updates the UI using EventSource to handle serv
 ## Backend
 * backend.py
 
+
+### Setup
+Install the required Python packages:
+`pip install -r requirements.txt`
+
+Setup the OpenAI API token:
+Create a file named openai.json in the backend config directory and add your OpenAI API token:
+```json
+{
+  "organization": "<Your Organization id>",
+  "api_key": "<Your OpenAI API Token>",
+  "project": "<Project key>",
+  "version": "v2.0.0" 
+}
+```
+
 This file acts as the backend server for the assistant application using Flask. It handles all HTTP requests and serves as the main interface between the frontend and the assistant functionalities.
 * Key Features:
 
