@@ -34,7 +34,7 @@ class Assistant:
             )
             create_openai_thread(self)
             create_openai_assistant(self)
-            self.run_ai()
+            #self.run_ai()
 
     def get_openai_image(self, image_id):
         file = self.client.files.retrieve(file_id=image_id)

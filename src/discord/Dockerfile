@@ -5,8 +5,7 @@ FROM python:3.10-slim
 WORKDIR /app
 
 RUN apt-get update
-RUN apt install gcc wget libmariadb3 libmariadb-src -y
-
+RUN apt install gcc wget libmariadb3 libmariadb-dev -y
 
 RUN pip install --upgrade pip
 
@@ -23,4 +22,4 @@ WORKDIR /app
 COPY ./ /app
 
 # Default command to run your application
-CMD ["python", "app.py"]
+CMD ["python","-u", "app.py"]

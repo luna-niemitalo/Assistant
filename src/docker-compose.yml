@@ -11,6 +11,7 @@ services:
             MYSQL_DISCORD_DATABASE: ${MYSQL_DISCORD_DATABASE}
             MYSQL_DISCORD_HOST: mariadb
             LD_LIBRARY_PATH: /usr/lib/mariadb
+            PYTHONUNBUFFERED: 1
 
     mariadb:
         image: mariadb:latest

@@ -1,29 +1,42 @@
 import base64
 import io
 import json
+import os
 import time
 from datetime import datetime
+import requests
 
 from openai import AssistantEventHandler
 from FrontEndMessage import FrontEndMessage
 from components.utils.utils import get_current_time_and_date, load_user_info
 
-from components.Google.Tasks.google_task_create import *
-from components.Google.Drive.read_google_drive_file import *
-from components.Google.Tasks.google_tasks_list import *
-from components.Google.Calendar.google_calendar_event_create import *
-from components.Google.Calendar.google_calendar_events_list import *
-from components.website_parse import *
-from components.Google.Youtube.youtube_playlist_list import *
-from components.Google.Youtube.youtube_playlist_create import *
-from components.Google.Youtube.youtube_playlist_add_item import *
-from components.Google.Youtube.youtube_video_search import *
-from components.Google.Gmail.email_get_and_parse import *
-from components.Google.Gmail.email_list_google import *
-from components.FilesystemOperations.file_list import *
-from components.FilesystemOperations.file_read import *
-from components.FilesystemOperations.file_write import *
-from components.FilesystemOperations.file_delete import *
+
+discord_message_url = "http://ebin.spurdo.us:3001/api/v1/channel/message"
+discord_message_headers = {
+    "Content-Type": "application/json",
+    "X-API-KEY": "yo7vqPmtlGWDWRA9RmWcY2IVFK4Q7ryDWJ-WkeeJIPS53iNAMcKW6T7Bi2qPoSAYUCu"
+}
+discord_message_data = {
+    "channel_id": "1214207908183810070",
+    "content": "",
+}
+
+#from components.Google.Tasks.google_task_create import *
+#from components.Google.Drive.read_google_drive_file import *
+#from components.Google.Tasks.google_tasks_list import *
+#from components.Google.Calendar.google_calendar_event_create import *
+#from components.Google.Calendar.google_calendar_events_list import *
+#from components.website_parse import *
+#from components.Google.Youtube.youtube_playlist_list import *
+#from components.Google.Youtube.youtube_playlist_create import *
+#from components.Google.Youtube.youtube_playlist_add_item import *
+#from components.Google.Youtube.youtube_video_search import *
+#from components.Google.Gmail.email_get_and_parse import *
+#from components.Google.Gmail.email_list_google import *
+#from components.FilesystemOperations.file_list import *
+#from components.FilesystemOperations.file_read import *
+#from components.FilesystemOperations.file_write import *
+#from components.FilesystemOperations.file_delete import *
 #from components.search_google import *
 
 entries = []
@@ -77,32 +90,13 @@ def create_openai_assistant(self):
                 Use markdown to format your text except when managing google tools, for google tools write the description using HTML and be verbose, and include as much information as possible, and make it look neat and readable 
             """
 
-    instructions += get_current_time_and_date()
 
-    instructions += "USER INFORMATION: Write all userinfo in .MD files (Path: C:\\dev\\Assistant\\src\\backend\\config\\user_information\\) " + json.dumps(user_info, indent=4)
 
     try:
         self.assistant = self.client.beta.assistants.create(
             name="Luna's Assistant " + config['version'] + " : " + self.selected_assistant,
             instructions=instructions,
             tools=[
-                CreateGoogleTask_description,
-                ListGoogleTasks_description,
-                CreateGoogleCalendarEvent_description,
-                GetGoogleCalendarEvents_description,
-                ParseWebsite_description,
-                ListYouTubePlaylists_description,
-                CreateYouTubePlaylist_description,
-                AddToYouTubePlaylist_description,
-                SearchYouTube_description,
-                ParseEmail_description,
-                ListGmailEmails_description,
-                #GooogleSearch_description
-                ListFiles_description,
-                ReadFile_description,
-                WriteFile_description,
-                DeleteFile_description,
-                ReadGoogleDriveFile_description
             ],
             model="gpt-4o" if self.selected_assistant == "OpenAI_4o_full" else "gpt-4o-mini",
         )
@@ -169,12 +163,6 @@ def deconstruct_openai_message(message):
     return result
 
 
-def handleStreamingAudio(audio):
-    audio_data = base64.b64decode(audio)
-    with open("audio.wav", "wb") as f:
-        f.write(audio_data)
-    return "Audio received"
-
 class OpenAI_AssistantEventHandler(AssistantEventHandler):
     def __init__(self, assistant):
         super().__init__()
@@ -185,10 +173,19 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
             self.handle_requires_action(event.data)
         elif event.event == 'thread.message.completed':
             # Find the message with the matching ID and update its content
+            deconstructed_message = deconstruct_openai_message(event.data)
+            discord_message_data['content'] = deconstructed_message.text
+
+            response = requests.post(discord_message_url, headers=discord_message_headers, json=discord_message_data)
+
+            print(response.status_code)
+            print(response.json())  # Prints response content in JSON format if available
+
             for message in self.assistant.message_objects:
                 if message.id == event.data.id:
                     message.content = event.data.content
                     self.assistant.set_force_update()
+                    print(f"Updated message content: {message.content}")
                     break
         elif event.event == "thread.message.delta":
             new_message = {
@@ -237,12 +234,3 @@ class OpenAI_AssistantEventHandler(AssistantEventHandler):
                 print(text, end="", flush=True)
             print()
 
-    def streamAudio(self):
-        response = self.assistant.client.audio.speech.create(
-            model="tts-1",
-            voice="alloy",
-            input="Hello world! This is a streaming test.",
-            response_format="opus",
-        )
-
-        response.stream_to_file("output.mp3")

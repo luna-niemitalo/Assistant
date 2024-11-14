@@ -1,0 +1,32 @@
+/* base.css */
+
+:root {
+    --background-color: #121212;
+    --accent-color: #8B0000;
+    --text-color: #E0E0E0;
+    --text-alt-color: #999;
+
+    --button-normal-bg: #1F1F1F;
+    --button-normal-text: #E0E0E0;
+
+    --button-hover-bg: #3A3A3A;
+    --button-hover-text: #FFFFFF;
+
+    --button-active-bg: #8B0000;
+    --button-active-text: #FFFFFF;
+
+    --input-font-size: 16px;
+    --input-padding: 12px;
+    --input-border-radius: 15px;
+    --input-border-color: var(--button-hover-bg);
+    --input-background: var(--background-color);
+}
+.input-wrapper {
+    position: relative;
+    background-color: var(--background-color);
+    border-radius: var(--input-border-radius);
+    width: min-content;
+    min-width: 200px;
+    border: 3px solid var(--input-border-color);
+    height: 80px;
+}

@@ -2,7 +2,7 @@ from flask import jsonify
 import json
 
 from db_handler import DiscordDBHandler
-from utils import build_db_message, build_db_user
+from utils import build_db_message, build_db_user, verify_property
 
 
 def get_handler(params, db_handler: DiscordDBHandler):
@@ -21,10 +21,17 @@ def get_handler(params, db_handler: DiscordDBHandler):
         return jsonify(data)
 
 def post_handler( data, db_handler: DiscordDBHandler):
-    print("Received message:")
-    db_obj = build_db_message(data['data'])
+    print("Received message:", data)
+    db_obj = build_db_message(data)
     db_user = build_db_user(data['author'])
     db_handler.upsert_data( "messages", db_obj)
     db_handler.upsert_data("users", db_user)
+
+    referenced_message = verify_property(data, 'referenced_message')
+    if referenced_message:
+        referenced_message_author = verify_property(referenced_message, 'author')
+
+        db_user2 = build_db_user(referenced_message_author)
+        db_handler.upsert_data("users", db_user2)
 
     return jsonify({"message": "Message received successfully"}), 201

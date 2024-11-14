@@ -1,28 +1,47 @@
+from datetime import datetime
+
+def verify_property(data, property_name):
+    if data is None: return None
+    if property_name in data:  # Check if property_name exists in data dictionary
+        if data[property_name]:  # Check if property_name value is not None to avoid TypeError
+            return data[property_name]
+    return None
+
 def build_db_message(data):
-    content = verify_property(data, 'cleanContent')
-    channel_id = verify_property(data, 'channelId')
-    guild_id = verify_property(data, 'guildId')
-    user_id = verify_property(data, 'authorId')
-    timestamp = verify_property(data, 'createdTimestamp')
+    content = verify_property(data, 'content')
+    channel_id = verify_property(data, 'channel_id')
+    guild_id = verify_property(data, 'guild_id')
+    user_id = verify_property(verify_property(data, 'author'), 'id')
+    timestamp = verify_property(data, 'timestamp')
     embeds = verify_property(data, 'embeds')
     components = verify_property(data, 'components')
     attachments = verify_property(data, 'attachments')
     mentions = verify_property(verify_property(data, 'mentions'), 'users')
-    reference = verify_property(data, 'reference')
     message_id = verify_property(data, 'id')
 
+    referenced_message_id = None
+    referenced_message = verify_property(data, 'referenced_message')
+    if referenced_message:
+        referenced_message_id = verify_property(referenced_message, 'id')
+
+
+
+    #TODO handle timestamp to unix timestamp
+    dt = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+    unix_ts = int(dt.timestamp())
     result = {
         'content': content,
         'channel_id': channel_id,
         'guild_id': guild_id,
         'user_id': user_id,
-        'timestamp': timestamp,
+        'timestamp': unix_ts,
         'embeds': embeds,
         'components': components,
         'attachments': attachments,
         'mentions': mentions,
-        'reference': reference,
+        'reference': referenced_message_id,
         'id': message_id
+
     }
 
     return result
@@ -58,18 +77,16 @@ def build_db_guild(data):
 def build_db_user(data):
     user_id = verify_property(data, 'id')
     username = verify_property(data, 'username')
-    global_name = verify_property(data, 'globalName')
+    global_name = verify_property(data, 'global_name')
     avatar = verify_property(data, 'avatar')
-    avatar_url = verify_property(data, 'avatarURL')
-    discriminator = verify_property(data, 'discriminator')
     flags = verify_property(data, 'flags')
-    accent_color = verify_property(data, 'accentColor')
+    accent_color = verify_property(data, 'accent_color')
     bot = verify_property(data, 'bot')
     bio = verify_property(data, 'bio')
     pronouns = verify_property(data, 'pronouns')
     banner = verify_property(data, 'banner')
-    banner_color = verify_property(data, 'bannerColor')
-    public_flags = verify_property(data, 'publicFlags')
+    banner_color = verify_property(data, 'banner_color')
+    public_flags = verify_property(data, 'public_flags')
     mutual_friends_count = verify_property(data, 'mutual_friends_count')
 
     result = {
@@ -77,8 +94,6 @@ def build_db_user(data):
         'username': username,
         'global_name': global_name,
         'avatar': avatar,
-        'avatar_url': avatar_url,
-        'discriminator': discriminator,
         'flags': flags,
         'accent_color': accent_color,
         'banner': banner,
@@ -111,8 +126,4 @@ def build_db_channel(data):
     return result
 
 
-def verify_property(data, property_name):
-    if property_name in data:  # Check if property_name exists in data dictionary
-        if data[property_name]:  # Check if property_name value is not None to avoid TypeError
-            return data[property_name]
-    return None
+

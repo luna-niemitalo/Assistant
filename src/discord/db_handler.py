@@ -11,7 +11,7 @@ def create_connection_pool():
     pool = mariadb.ConnectionPool(
         user=os.environ['MYSQL_DISCORD_USER'],
         password=os.environ['MYSQL_DISCORD_PASSWORD'],
-        host=os.environ['MYSQL_DISCORD_HOST'],
+        host=os.environ['MYSQL_HOST'],
         port=3306,
         database=os.environ['MYSQL_DISCORD_DATABASE'],
         pool_name="web-app",
@@ -65,7 +65,7 @@ def serialize_value(value):
 
 class DiscordDBHandler:
     def __init__(self):
-        print("Initializing DiscordDBHandler")
+        print("Initializing DiscordDBHandler 2")
         self.conn_pool = create_connection_pool()
 
     def check_existing_item(self, t, item_id):
@@ -148,7 +148,7 @@ class DiscordDBHandler:
         item_id = data.get("id")
 
         # Step 1: Check if item with matching ID exists in the database
-        existing_item = None #check_existing_item(conn, t, item_id)
+        existing_item = self.check_existing_item(t, item_id)
 
         # Step 2: Decide between insert and update
         if not existing_item:

@@ -8,10 +8,9 @@ import json
 from FrontEndMessage import FrontEndMessage
 from Assistant import Assistant
 from DiscordTools import getDataUntillTokenLimit, get_db_connection, messages_to_AI_str
-from components.utils.utils import set_config_path
+from components.utils.utils import set_config_path, build_db_message
 
 set_config_path()
-
 
 SCOPES = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "scopes.json")))
 
@@ -22,9 +21,10 @@ CORS(app)
 
 assistant = Assistant(assistant_options[1])
 
+
 @app.route('/', methods=['GET'])
 def default():
-    #Test webserver
+    # Test webserver
     return jsonify("Hello, World!")
 
 
@@ -32,11 +32,33 @@ def default():
 def messages():
     if request.method == 'POST':
         json_message = request.get_json(force=True)
-        fem = FrontEndMessage(
-            text=json_message['text'],
-            images=json_message['images'],
-            role=json_message['role'],
-        )
+
+        db_message = build_db_message(json_message)
+        print("Received message: ", db_message)
+        timestamp = db_message['timestamp']
+        # TODO: Convert TS to datetime
+        content = db_message['content']
+        user_id = db_message['user_id']
+        # TODO: Fetch username from Database
+
+        embeds = db_message['embeds']
+        components = db_message['components']
+        attachments = db_message['attachments']
+        mentions = db_message['mentions']
+        #reference = db_message.reference
+        # TODO: Fetch referred message from Database
+
+        text = f"[{timestamp}: {user_id}] {content} \n "
+        if embeds:
+            text += f"{embeds}\n"
+        if components:
+            text += f"\nComponents: {components}\n"
+        if attachments:
+            text += f"\nAttachments: {attachments}\n"
+        if mentions:
+            text += f"\nMentions: {mentions}\n"
+        print(text)
+        fem = FrontEndMessage(text=text, images=[], role="user")
         result = assistant.add_message(fem)
         print("Result: ", result.get_fem())
         return json.dumps(result.get_fem())
@@ -53,90 +75,6 @@ def messages():
                 time.sleep(0.1)
 
         return Response(event_stream(), mimetype="text/event-stream")
-
-@app.route('/api/discord/data', methods=['GET'])
-def discord_ai():
-    channelId = request.args.get('channelId')
-    print(channelId)
-    results = getDataUntillTokenLimit(10000000, channelId)
-    print(len(results))
-    api_key = json.loads(open(os.path.join(os.getenv('CONFIG_PATH'), 'OpenAI_token.json')).read())['api_key']
-    print(api_key)
-    return
-    client = OpenAI(
-        api_key=api_key,
-    )
-    prompt = messages_to_AI_str(results)
-    completion = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system",
-             "content": """
-             You are a note taker, provide a brief few sentence summary of the conversation as there will be a lot of data
-             Update previous summary, or add extra notes if available.
-             Make a short section in the notes for each participants personality and mental state.
-             """},
-            {"role": "user", "content": prompt}
-        ]
-    )
-    return completion.to_json()
-
-@app.route('/api/discord/messages', methods=['POST', 'GET', 'OPTIONS'])
-def post_message():
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'content-type': 'application/json',
-        }
-        return Response(status=200, headers=headers)
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    if request.method == 'GET':
-        channel_id = request.args.get('channelId')
-        if channel_id is None:
-            return jsonify(conn.execute('SELECT * FROM main.messages').fetchall())
-        rows = cursor.execute('SELECT id, user_id, channel_id, content, timestamp, attachments FROM messages WHERE channel_id = ?', (channel_id,)).fetchall()
-        # Get the column names
-        columns = [description[0] for description in cursor.description]
-        # Convert rows to a list of dictionaries
-        data = [dict(zip(columns, row)) for row in rows]
-
-        return jsonify(data)
-    if request.method == 'POST':
-        data = request.get_json()
-        print("Received message:", data)
-        messages = request.json  # Expecting a list of messages in the request
-        for message in messages:
-            channel_id = message['channelId']
-            author_id = message['authorId']
-            message_id = message['messageId']
-            content = message['content']
-            timestamp = message['timestamp']
-            attachments = json.dumps(message['attachments'])  # Store attachments as JSON string
-            channel_exists = conn.execute('SELECT id FROM main.channels WHERE id = ?', (channel_id,)).fetchone()
-            if channel_exists is None:
-                conn.execute('INSERT OR IGNORE INTO main.missing_data (type, id) VALUES (?, ?)', ('channel', channel_id))
-                conn.commit()
-
-            tsWithSameContent = conn.execute('SELECT timestamp FROM main.messages WHERE content = ?', (content,)).fetchone()
-            if tsWithSameContent is not None:
-                difference = abs(tsWithSameContent['timestamp'] - timestamp)
-                if difference < 10 * 1000:
-                    continue
-            conn.execute("""INSERT OR IGNORE INTO
-            main.messages(id, user_id, channel_id, content, timestamp, attachments)
-            VALUES(?, ?, ?, ?, ?, ?)""",
-                         (message_id, author_id, channel_id, content, timestamp, attachments))
-
-            conn.commit()
-            user_exists = conn.execute('SELECT id FROM main.users WHERE id = ?', (author_id,)).fetchone()
-            if user_exists is None:
-                conn.execute('INSERT OR IGNORE INTO main.missing_data (type, id) VALUES (?, ?)', ('user', author_id))
-                conn.commit()
-        conn.close()
-        return jsonify({"message": "Message received successfully"}), 201
 
 
 @app.route('/api/status', methods=['GET'])
@@ -201,6 +139,7 @@ def force_update():
     assistant.set_force_update()
     return jsonify({"status": "success"})
 
+
 @app.route('/api/bottest', methods=['POST', 'OPTIONS'])
 def bot_test():
     if request.method == 'OPTIONS':
@@ -228,8 +167,6 @@ def get_assistant():
         return jsonify({"selection": assistant.selected_assistant, "options": assistant_options})
     if request.method == 'GET':
         return jsonify({"selection": assistant.selected_assistant, "options": assistant_options})
-
-
 
 
 if __name__ == '__main__':

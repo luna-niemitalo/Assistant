@@ -3,8 +3,6 @@ import os
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from components.Google.google_credentials_create import createGoogleCredentials
-from components.utils.utils import set_config_path
 
 # If modifying these scopes, delete the file token.json.
 CreateGoogleTask_description = {
@@ -51,16 +49,11 @@ CreateGoogleTask_description = {
 }
 
 
-def create_google_task(title, importance, description, subtasks = []):
+def create_google_task(credentials, title, importance, description, subtasks = []):
     print("parameters", title, importance, description, subtasks)
-    creds = createGoogleCredentials()
-    if creds["status"] == "error":
-        return json.dumps(creds)
-    else :
-        creds = creds["message"]
 
     try:
-        service = build("tasks", "v1", credentials=creds)
+        service = build("tasks", "v1", credentials)
 
 
         taskLists = json.load(open(os.path.join(os.environ["CONFIG_PATH"], "taskIDs.json")))
@@ -83,7 +76,6 @@ def create_google_task(title, importance, description, subtasks = []):
         print(err)
 
 if __name__ == "__main__":
-    set_config_path()
 
     task = {
         "title": "Buy groceries",

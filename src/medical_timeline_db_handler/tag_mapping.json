@@ -1,0 +1,12 @@
+{
+  "1": "Nausea",
+  "2": "Vomiting",
+  "4": "Diarrhea",
+  "8": "Neck pain",
+  "16": "Vertigo",
+  "32": "Dizziness",
+  "64": "Light sensitivity",
+  "128": "Noise sensitivity",
+  "256": "Ringing in the ears",
+  "512": "Vision problems"
+}

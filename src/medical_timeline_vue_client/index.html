@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+      <style>
+          @import './src/assets/base.css';
+
+          @media (min-width: 1024px) {
+              body {
+                  display: flex;
+                  place-items: center;
+              }
+
+              #app {
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  padding: 0 2rem;
+              }
+          }
+      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vite App</title>
+  </head>
+  <script type="module" src="/src/main.ts"></script>
+  <body id="container">
+  </body>
+</html>

@@ -79,14 +79,6 @@ def channels():
 
 @app.route("/api/messages", methods=["GET", "POST", "OPTIONS"])
 def messages():
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'content-type': 'application/json',
-        }
-        return Response(status=200, headers=headers)
     # Handle GET request to get messages
     if request.method == "GET":
         from messages_handler import get_handler
@@ -94,6 +86,7 @@ def messages():
 
     if request.method == 'POST':
         data = request.get_json()
+        print("Received message:", data)
         from messages_handler import post_handler
         return post_handler(data, db_handler)
     return jsonify({"message": "Not implemented"}), 501
@@ -101,4 +94,5 @@ def messages():
 
 
 if __name__ == "__main__":
+    print("Starting Flask server...")
     app.run(debug=True, port=5020, host='0.0.0.0')
