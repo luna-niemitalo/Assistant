@@ -1,12 +1,12 @@
 <template>
   <div class="input-wrapper">
     <label v-if="label" class="input-label">
-      {{ label }}:
+      {{ label }}({{min}} - {{max}}):
       <span v-if="isSlider" class="input-slider-label">{{ localValue }}</span>
     </label>
     <input
         v-if="isSlider"
-        class="input-field"
+        class="custom-input-general"
         type="range"
         :min="min"
         :max="max"
@@ -15,7 +15,7 @@
     />
     <input
         v-else
-        class="input-field"
+        class="custom-input-general"
         type="text"
         :placeholder="placeholder"
         v-model="localValue"
@@ -89,39 +89,15 @@ export default defineComponent({
 <style scoped>
 
 
-.input-label {
-  position: absolute;
-  top: 0.3rem;
-  left: var(--input-padding);
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: var(--text-alt-color);
-  pointer-events: none;
-  text-transform: capitalize;
-}
-.input-wrapper {
-  border: unset;
-}
 
-.input-field {
-  width: 100%;
-  padding: var(--input-padding);
-  font-size: var(--input-font-size);
-  color: var(--text-color);
-  background: var(--input-background);
-  border: 3px solid var(--input-border-color);
-  border-radius: var(--input-border-radius);
-  outline: none;
-  transition: border-color 0.2s ease-in-out;
-  padding-top: 2rem; /* Offset for label */
-}
+
 
 .input-slider-label {
   color: var(--text-color);
 }
 
-.input-field[type="range"] {
-  border: 3px solid var(--input-border-color);
+.custom-input-general[type="range"] {
+  border: unset;
   border-radius: var(--input-border-radius);
   cursor: pointer;
 
@@ -134,7 +110,7 @@ input[type="range"]::-moz-range-track {
   background-color: var(--input-border-color);
 }
 
-.input-field:focus {
+.custom-input-general:focus {
   border-color: var(--accent-color);
 }
 </style>

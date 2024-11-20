@@ -1,32 +1,111 @@
 /* base.css */
 
 :root {
-    --background-color: #121212;
-    --accent-color: #8B0000;
-    --text-color: #E0E0E0;
-    --text-alt-color: #999;
 
-    --button-normal-bg: #1F1F1F;
-    --button-normal-text: #E0E0E0;
-
-    --button-hover-bg: #3A3A3A;
-    --button-hover-text: #FFFFFF;
-
-    --button-active-bg: #8B0000;
-    --button-active-text: #FFFFFF;
 
     --input-font-size: 16px;
     --input-padding: 12px;
     --input-border-radius: 15px;
+    --input-border-width: 3px;
     --input-border-color: var(--button-hover-bg);
     --input-background: var(--background-color);
+}
+.selectable {
+    cursor: pointer;
+    text-align: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    user-select: none;
+    transition: background-color 0.2s ease;
+    padding: .2rem 1.5rem .2rem 1rem;
+
+
+    &.selected {
+        background-color: var(--button-active-bg);
+        color: var(--button-active-text);
+    }
+
+    &:hover {
+        background-color: var(--button-hover-bg);
+        color: var(--button-hover-text);
+    }
+
+    &.nearby {
+        background-color: var(--button-hover-bg);
+        color: var(--button-hover-text);
+    }
+}
+
+.input-label {
+    user-select: none;
+    background-color: var(--background-color);
+    position: absolute;
+    left: var(--input-padding);
+
+    border-top-left-radius: var(--input-border-radius);
+    border-top-right-radius: var(--input-border-radius);
+
+    font-size: var(--font-medium);
+    font-weight: bold;
+    color: var(--accent-color);
+    pointer-events: none;
+    text-transform: capitalize;
 }
 .input-wrapper {
     position: relative;
     background-color: var(--background-color);
     border-radius: var(--input-border-radius);
-    width: min-content;
-    min-width: 200px;
-    border: 3px solid var(--input-border-color);
-    height: 80px;
+    min-width: min-content;
+    border: var(--input-border-width) solid var(--input-border-color);
+    min-height: 80px;
+    height: fit-content;
+    width: fit-content;
+
+    margin: 5px;
+    padding: unset;
+
+    flex-grow: 1;
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--button-active-bg);
+}
+
+.custom-input-general {
+    padding: 0 var(--input-padding);
+    font-size: var(--input-font-size);
+    color: var(--text-color);
+    background: var(--input-background);
+    border: unset;
+    border-radius: var(--input-border-radius);
+    outline: none;
+    transition: border-color 0.2s ease-in-out;
+
+    padding-top: 40px;
+    padding-bottom: 20px;
+
+    width: 100%;
+    position: relative;
+    background-color: transparent;
+    top: var(--input-border-width);
+    font-family: inherit;
+}
+
+.small {
+    font-size: var(--font-small);
+    line-height: var(--font-small);
+    height: var(--font-small);
+}
+
+.medium {
+    font-size: var(--font-medium);
+    line-height: var(--font-medium);
+    height: var(--font-medium);
+}
+
+.large {
+    font-size: var(--font-medium);
+    line-height: var(--font-medium);
+    height: var(--font-medium);
 }

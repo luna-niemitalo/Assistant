@@ -3,14 +3,17 @@ import axiosInstance from './axiosInstance';
 
 export interface EventData {
     title: string;
+    user_id: number;
+    event_type: string;
     severity?: number;
-    timestamp?: string;
+    timestamp?: number;
     falloff?: string;
     start_time?: string;
     end_time?: string;
     symptom: boolean;
     category: string;
     notes?: string;
+    tags?: number;
 }
 
 export const addEvent = async (eventData: EventData) => {

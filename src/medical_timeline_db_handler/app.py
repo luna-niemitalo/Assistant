@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 from flask import jsonify
@@ -7,6 +8,7 @@ import json
 import os
 from flask import Flask, jsonify, request, Response, render_template
 from flask_cors import CORS
+from sqlalchemy.testing.plugin.plugin_base import logging
 
 app = Flask(__name__)
 CORS(app)
@@ -107,7 +109,8 @@ def create_event():
     # Generate a UUID for the event
     user_id = data.get('user_id')
     title = data.get('title')
-    created_at = datetime.now()
+    created_at = time.time()
+    print(created_at)
     event_type = data.get('event_type')
     timestamp = data.get('timestamp')
     falloff_range = data.get('falloff_range')  # For 'around' events
@@ -117,6 +120,7 @@ def create_event():
     severity = data.get('severity')                # Severity for symptoms
     symptom = data.get('symptom', False)           # Boolean, default to False
     category = data.get('category', '')            # Flexible text category
+    tags = data.get('tags', 0)                 # Array of tag IDs
 
     # Severity validation: Only for symptom events, float between 1.0 and 10.0
     if symptom and (severity is None or not (0.0 <= severity <= 10.0)):
@@ -127,6 +131,8 @@ def create_event():
     if not (user_id and title and event_type in {'at', 'around', 'between'}):
         return jsonify({"error": "Missing required fields or invalid event type"}), 400
 
+    # Validate timestamp format
+
     # Database insertion
     try:
         cursor = conn.cursor()
@@ -134,10 +140,10 @@ def create_event():
         # Insert into Events table
         cursor.execute("""
             INSERT INTO Events ( user_id, title, created_at, event_type, 
-                                timestamp, falloff_range, start_timestamp, end_timestamp, notes, severity, symptom, category)
-            VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                timestamp, falloff_range, start_timestamp, end_timestamp, notes, severity, symptom, category, tags)
+            VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, ( user_id, title, created_at, event_type, timestamp,
-              falloff_range, start_timestamp, end_timestamp, notes, severity, symptom, category))
+              falloff_range, start_timestamp, end_timestamp, notes, severity, symptom, category, tags))
 
         conn.commit()
         cursor.close()

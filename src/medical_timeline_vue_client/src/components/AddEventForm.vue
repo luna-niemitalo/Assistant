@@ -2,37 +2,41 @@
   <div class="form">
     <h2>Add New Event</h2>
     <BaseTextInput label="Title" v-model="title"/>
-    <BaseNumberInput label="Severity (1-10)" v-model.number="severity" :min="1" :max="10" :step="0.1"/>
+    <BaseNumberInput label="Severity" v-model.number="severity" :min="1" :max="10" :step="0.1" :value="severity"/>
     <BaseTextInput v-model="category" label="category" />
-    <div>
-      <label>Symptom:</label>
-      <input v-model="symptom" type="checkbox" />
-    </div>
-    <div>
-      <label>Category:</label>
-      <input v-model="category" required />
-    </div>
-    <div>
-      <label>Tags:</label>
-      <div class="tags">
-        <TagComponent v-for="tag in tags" :key="tag.key" :tag="tag" @click="handleTagUpdate(tag)"/>
-      </div>
-    </div>
-    <div>
-      <label>Notes:</label>
-      <textarea v-model="notes"></textarea>
-    </div>
-    <button type="submit" @click="handleSubmit">Add Event</button>
+
+    <RadioField :options="['at', 'around', 'between']" label="Radio"/>
+
+    <input type="color">
+    <input type="datetime-local">
+    <DateTimePicker label="Date" />
+    <TagList :tags="tags" v-model="pickedTags"/>
+    <BaseButton v-model="symptom" :toggle="true" label="Symptom" size="small" icon-size="medium" />
+    <BaseTextArea v-model="notes" label="Notes" />
+
+    <BaseButton
+        label="Add Event"
+        type="submit"
+        :disabled="!title || submittedSuccessfully !== undefined"
+        :success="submittedSuccessfully"
+        size="small"
+        icon-size="medium"
+        @customClick="handleSubmit"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import {addEvent, getTagsMapping} from '@/api/medicalTrackerApi';
-import TagComponent, {type ITag} from '@/components/Tag.vue';
-import FieldComponent from "@/components/FieldComponent.vue";
+import {addEvent, type EventData, getTagsMapping} from '@/api/medicalTrackerApi';
+import {type ITag} from '@/components/Tag.vue';
 import BaseTextInput from "@/components/BaseTextInput.vue";
 import BaseNumberInput from "@/components/BaseNumberInput.vue";
+import BaseTextArea from "@/components/BaseTextArea.vue";
+import BaseButton from "@/components/BaseButton.vue";
+import TagList from "@/components/TagList.vue";
+import RadioField from "@/components/RadioField.vue";
+import DateTimePicker from "@/components/DateTimePicker.vue";
 
 export interface dataTypings {
   title: string;
@@ -41,11 +45,13 @@ export interface dataTypings {
   category: string;
   notes: string;
   tags: ITag[]; // populated in mounted hook from API call
+  pickedTags: 0;
+  submittedSuccessfully?: boolean;
 }
 export default defineComponent({
   name: 'AddEventForm',
 
-  components: {BaseNumberInput, BaseTextInput, FieldComponent, TagComponent },
+  components: {DateTimePicker, RadioField, TagList, BaseButton, BaseTextArea, BaseNumberInput, BaseTextInput },
   data() {
     return {
       title: '',
@@ -53,7 +59,10 @@ export default defineComponent({
       symptom: false,
       category: '',
       notes: '',
-      tags: [] // populated in mounted hook from API call
+      tags: [], // populated in mounted hook from API call
+      pickedTags: 0, // used for tracking selected tags, not currently in use in this form
+      submittedSuccessfully: undefined,
+
     } as dataTypings;
   },
   mounted: function () {
@@ -69,36 +78,48 @@ export default defineComponent({
       console.log(this.tags);
     })
   },
+  computed: {
+    eventData: function (): EventData {
+      return {
+        user_id: 1,
+        event_type: 'at',
+        title: this.title,
+        severity: this.severity,
+        symptom: this.symptom,
+        category: this.category,
+        notes: this.notes,
+        tags: this.pickedTags,
+        timestamp: new Date().getTime(),
+      }
+    }
+  },
   methods: {
-    handleTagUpdate: function (tag: ITag) {
-      tag.selected =!tag.selected;
-    },
     handleSubmit: async function () {
+      if (this.submittedSuccessfully !== undefined) return;
       console.log("submit");
       try {
-        //const response = await addEvent();
-        //console.log('Event added successfully:', response);
+        const response = await addEvent(this.eventData);
+        console.log('Event added successfully:', response);
+        this.submittedSuccessfully = true;
       } catch (error) {
         console.error('Error adding event:', error);
+        this.submittedSuccessfully = false;
       }
 
     }
   },
-  computed: {
-    selectedTags: function () {
-      return this.tags.filter((tag: ITag) => tag.selected);
-    },
-    packedTags: function () {
-      if (this.selectedTags.length === 0) return 0;
-      return this.selectedTags.map(t => t.key).reduce((acc, tag) => {
-        return acc | tag;
-      })
-    }
-  }
+
 });
 </script>
 
 <style scoped lang="scss">
+.form {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  flex-grow: 1;
+  gap: 20px;
+}
 .tags {
   display: flex;
   flex-wrap: wrap;
@@ -111,5 +132,6 @@ input {
   height: 4rem;
   padding-top: 25px;
   background-color: var(--background-color);
+  color: var(--text-color);
 }
 </style>
