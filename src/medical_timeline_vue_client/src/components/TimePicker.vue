@@ -102,7 +102,7 @@
 </template>
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
-import ScrollList, {type IScrollListItem} from "@/components/ScrollList.vue";
+import {type IScrollListItem} from "@/components/ScrollList.vue";
 
 interface TimeItem extends IScrollListItem {
   clockDisplay?: string;
@@ -176,7 +176,7 @@ export default defineComponent({
       this.selectedHour = this.hours.find(h => h.id === Number(this.timeSelection.selectedHour!.id));
     }
     if (this.timeSelection.selectedMinute) {
-      this.selectedMinute = this.timeSelection.selectedMinute;
+      this.selectedMinute = this.minutes.find(m => m.id === Number(this.timeSelection.selectedMinute!.id));
     }
     document.addEventListener('mousemove', this.onmousemove)
     document.addEventListener('click', this.documentClick)
@@ -192,11 +192,9 @@ export default defineComponent({
       if (!this.closestItem.item) return;
 
       if (this.display === 'hourSelector') {
-        //this.selectedHour = this.hours.find(h => h.id === Number(this.closestItem.item!.id));
         this.selectHour(this.closestItem.item)
         this.submitUpdate();
       } else if (this.display === 'minuteSelector') {
-        //this.selectedMinute = this.minutes.find(m => m.id === Number(this.closestItem.item!.id));
         this.selectMinute(this.closestItem.item)
         this.submitUpdate();
       }
