@@ -6,7 +6,7 @@
           v-for="item in items"
           :key="item.id"
           :id="String(item.id)"
-          class="selectable"
+          class="selectable scroll_item"
           @click="handleClick(item)"
       >
         {{ item.label }}

@@ -53,7 +53,7 @@
 import {defineComponent} from 'vue'
 import ScrollList, {type IScrollListItem} from "@/components/ScrollList.vue";
 import CalendarDatePicker from "@/components/CalendarDatePicker.vue";
-import TimePicker from "@/components/TimePicker.vue";
+import TimePicker, {type TimeSelection} from "@/components/TimePicker.vue";
 
 type DataTypings = {
   showCalendar: boolean;
@@ -77,12 +77,7 @@ export type DateSelection = {
   selectedDay?: IScrollListItem;
 }
 
-export type TimeSelection = {
-  hours: IScrollListItem[];
-  minutes: IScrollListItem[];
-  selectedHour?: IScrollListItem;
-  selectedMinute?: IScrollListItem;
-}
+
 
 export default defineComponent({
   name: "DatePicker",
@@ -107,8 +102,6 @@ export default defineComponent({
         selectedDay: undefined,
       },
       timeSelection: {
-        hours: [],
-        minutes: [],
         selectedHour: undefined,
         selectedMinute: undefined,
       },
@@ -233,14 +226,6 @@ export default defineComponent({
         id: currentMinute,
         label: currentMinute < 10? `0${currentMinute}` : currentMinute
       };
-      this.timeSelection.hours = Array.from({length: 24}, (_, i) => ({
-        id: i,
-        label: i < 10? `0${i}` : i
-      }));
-      this.timeSelection.minutes = Array.from({length: 60}, (_, i) => ({
-        id: i,
-        label: i < 10? `0${i}` : i
-      }));
     }
 
   }

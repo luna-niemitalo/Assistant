@@ -22,93 +22,80 @@
         />
       </svg>
       <div class="hourSelector"
-           v-if="display == 'hourSelector'">
+           v-if="display == 'hourSelector'"
+           :ref="'timeDisplay'"
+      >
         <div class="time_selector pm">
           <div
-              class="selectable"
-              :class="selectedClass(hour)"
+              class="locator"
+              :style="styleConstructor(hour)"
               v-for="hour in pm_hours"
               :key="hour.id"
               :id="String(hour.id)"
               :ref="String('hour' + hour.id)"
+          >
+            <div
+              class="selectable"
+              :class="selectedClass(hour)"
               @click="selectHour(hour)"
           >
             {{ hour.label }}
+          </div>
           </div>
         </div>
 
         <div class="time_selector am">
           <div
-              class="selectable"
-              :class="selectedClass(hour)"
+              class="locator"
+              :style="styleConstructor(hour)"
               v-for="hour in am_hours"
               :key="hour.id"
               :ref="String('hour' + hour.id)"
               :id="String(hour.id)"
-              @click="selectHour(hour)"
           >
-            {{ hour.label }}
+            <div
+                class="selectable"
+                :class="selectedClass(hour)"
+                @click="selectHour(hour)"
+            >
+              {{ hour.label }}
+            </div>
           </div>
         </div>
       </div>
       <div
           class="time_selector minutes"
           v-if="display == 'minuteSelector'"
+          :ref="'timeDisplay'"
       >
         <div
-            class="selectable"
-            :class="selectedClass(min)"
-            v-for="min in min_display"
+            class="locator"
+            :style="styleConstructor(min)"
+            v-for="min in minutes"
             :key="min.id"
             :ref="String('min' + min.id)"
             :id="String(min.id)"
-            @click="selectMinute(min)"
         >
-          {{ min.label }}
-        </div>
-      </div>
-      <div
-          class="time_selector test"
-          v-if="display == 'testSelector'"
-      >
-        <div
-            class="selectable"
-            :class="selectedClass(min)"
-            v-for="min in min_display"
-            :key="min.id"
-            :ref="String('min' + min.id)"
-            :id="String(min.id)"
-            @click="selectMinute(min)"
-        >
-          {{ min.label }}
+          <div class="selectable"
+               :class="selectedClass(min)"
+               @click="selectMinute(min)"
+          >
+            {{ min.clockDisplay }}
+          </div>
         </div>
       </div>
     </div>
     <div class="time_display">
       <div>
-        <div class="selectable" @click.prevent.stop="showHourSelector = true">
-          {{ internal_status.selectedHour?.label }}
+        <div class="selectable" @click.prevent.stop="display = 'hourSelector'">
+          {{ selectedHour?.label }}
         </div>
-        <ScrollList v-if="showHourSelector"
-                    :items="internal_status.hours"
-                    :value="internal_status.selectedHour"
-                    v-model="internal_status.selectedHour"
-                    @change="showHourSelector = false"
-                    @close="showHourSelector = false"
-        />
       </div>
       /
       <div>
-        <div class="selectable" @click.prevent.stop="showMinuteSelector = true">
-          {{ internal_status.selectedMinute?.label }}
+        <div class="selectable" @click.prevent.stop="display = 'minuteSelector'">
+          {{ selectedMinute?.label }}
         </div>
-        <ScrollList v-if="showMinuteSelector"
-                    :items="internal_status.minutes"
-                    :value="internal_status.selectedMinute"
-                    v-model="internal_status.selectedMinute"
-                    @change="showMinuteSelector = false"
-                    @close="showMinuteSelector = false"
-        />
       </div>
     </div>
   </div>
@@ -116,24 +103,44 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 import ScrollList, {type IScrollListItem} from "@/components/ScrollList.vue";
-import type {TimeSelection} from "@/components/DatePicker.vue";
+
+interface TimeItem extends IScrollListItem {
+  clockDisplay?: string;
+  radius?: number;
+  position?: {
+    x: number;
+    y: number;
+  }
+}
+
+export type TimeSelection = {
+  selectedHour?: IScrollListItem;
+  selectedMinute?: IScrollListItem;
+}
 
 
 type DataTypings = {
-  internal_status: TimeSelection;
   showHourSelector: boolean;
   showMinuteSelector: boolean;
-  closestElement: {
-    element: HTMLElement | null,
+  selectedHour?: TimeItem;
+  selectedMinute?: TimeItem;
+  closestItem: {
+    item: TimeItem | null,
     distance: number,
   };
-  selectedElement: HTMLElement | null;
   display: 'hourSelector' | 'minuteSelector' | 'none' | 'testSelector';
+  size: {
+    width: number;
+    height: number;
+  };
+  center: {
+    x?: number;
+    y?: number;
+  };
 }
 
 export default defineComponent({
   name: "TimePicker",
-  components: {ScrollList},
   emits: ['update:modelValue', 'change', 'close'],
   props: {
     timeSelection: {
@@ -143,18 +150,34 @@ export default defineComponent({
   },
   data(): DataTypings {
     return {
-      internal_status: this.timeSelection,
       showHourSelector: false,
       showMinuteSelector: false,
-      closestElement: {
-        element: null,
+      closestItem: {
+        item: null,
         distance: Infinity,
       },
-      selectedElement: null,
-      display: 'testSelector'
+      selectedHour: undefined,
+      selectedMinute: undefined,
+      display: 'hourSelector',
+      size: {
+        width: 250,
+        height: 250,
+      },
+      center: {
+        x: undefined,
+        y: undefined,
+      }
     }
   },
   created() {
+    this.center.x = this.size.width / 2;
+    this.center.y = this.size.height / 2;
+    if (this.timeSelection && this.timeSelection.selectedHour) {
+      this.selectedHour = this.hours.find(h => h.id === Number(this.timeSelection.selectedHour!.id));
+    }
+    if (this.timeSelection.selectedMinute) {
+      this.selectedMinute = this.timeSelection.selectedMinute;
+    }
     document.addEventListener('mousemove', this.onmousemove)
     document.addEventListener('click', this.documentClick)
   },
@@ -163,36 +186,51 @@ export default defineComponent({
     document.removeEventListener('click', this.documentClick)
   },
   methods: {
-    documentClick() {
+    documentClick(e: Event) {
+      console.log(e)
+      if (e.target && (e.target as HTMLElement).classList.contains('scroll_item')) return;
+      if (!this.closestItem.item) return;
+
       if (this.display === 'hourSelector') {
-        console.log(this.closestElement)
-        const hour = this.internal_status.hours.find(h => h.id === Number(this.closestElement.element?.id));
-        this.internal_status.selectedHour = {
-          id: hour?.id ?? 0,
-          label: hour?.label ?? 0,
-        }
+        //this.selectedHour = this.hours.find(h => h.id === Number(this.closestItem.item!.id));
+        this.selectHour(this.closestItem.item)
         this.submitUpdate();
-      }
-      if (this.display ==='minuteSelector') {
-        const minute = this.internal_status.minutes.find(m => m.id === Number(this.closestElement.element?.id));
-        this.internal_status.selectedMinute = {
-          id: minute?.id?? 0,
-          label: minute?.label?? 0,
-        }
+      } else if (this.display === 'minuteSelector') {
+        //this.selectedMinute = this.minutes.find(m => m.id === Number(this.closestItem.item!.id));
+        this.selectMinute(this.closestItem.item)
         this.submitUpdate();
       }
     },
     selectHour(hour: IScrollListItem) {
       console.log(hour)
-      this.internal_status.selectedHour = hour;
+      this.selectedHour = this.hours.find(h => h.id === Number(hour.id));
+      this.display = 'minuteSelector';
       this.submitUpdate();
     },
     selectMinute(min: IScrollListItem) {
-      this.internal_status.selectedMinute = this.internal_status.minutes[min.id];
+      console.log(min)
+      this.selectedMinute = this.minutes.find(m => m.id === Number(min.id));
       this.submitUpdate();
+      this.$emit('close');
     },
-    selectedClass(input: IScrollListItem) {
-      return this.internal_status.selectedMinute?.id === input.id ? 'selected' : ''
+    styleConstructor(input: TimeItem) {
+      return {
+        transform: 'translate(' + input.position?.x + 'px,' + input.position?.y + 'px)',
+      };
+    },
+    selectedClass(input: TimeItem) {
+      const classes = [];
+      if (this.selectedHour?.id === input.id && this.display === 'hourSelector') {
+        classes.push('selected');
+      }
+      if (this.selectedMinute?.id === input.id && this.display === 'minuteSelector') {
+        classes.push('selected');
+      }
+      if (this.closestItem?.item?.id === input.id) {
+        classes.push('nearby');
+      }
+
+      return classes.join(' ');
     },
     submitUpdate() {
       this.showHourSelector = false;
@@ -200,146 +238,130 @@ export default defineComponent({
       this.$emit('update:modelValue', this.internal_status)
       this.$emit('change', this.internal_status)
     },
-    getElementCenter(element: HTMLElement) {
-      const rect = element.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      const svgRect = document.querySelector('.header')?.getBoundingClientRect();
-      if (!svgRect) return null;
+    getElementCenter(item: TimeItem) {
+      if (!item.position) return {x: 0, y: 0};
       return {
-        x: x - svgRect.left,
-        y: y - svgRect.top,
-      };
+        x: item.position.x,
+        y: item.position.y,
+      }
     },
 
     onmousemove(event: MouseEvent) {
+      const x = event.clientX;
+      const y = event.clientY;
+      this.closestItem = {
+        item: null,
+        distance: Infinity,
+      }
       if (this.display == 'hourSelector') {
-        const target = event.target as HTMLElement;
-        if (target.classList.contains('selectable')) {
-          for (const hour of this.internal_status.hours) {
-            const hourElement = this.$refs['hour' + hour.label] as HTMLElement[];
-            const element = hourElement[0];
-            if (element) {
-              element.classList.remove('nearby');
-            }
-          }
-          this.closestElement = {
-            element: target,
-            distance: 0,
-          };
-          return;
-        }
+        const hours = this.am_hours.concat( this.pm_hours);
+        for (const hour of hours) {
+          const containerLocation = (this.$refs['timeDisplay'] as HTMLElement).getBoundingClientRect()
+          const elementX = containerLocation.x + hour.position!.x;
+          const elementY = containerLocation.y + hour.position!.y;
+          const distance = Math.sqrt((x - elementX) ** 2 + (y - elementY) ** 2);
 
-        const x = event.clientX;
-        const y = event.clientY;
-        this.closestElement = {
-          element: null,
-          distance: Infinity,
-        }
-        for (const hour of this.internal_status.hours) {
-          const hourElement = this.$refs['hour' + hour.label] as HTMLElement[];
-          const element = hourElement[0];
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            const distance = Math.sqrt((x - rect.left) ** 2 + (y - rect.top) ** 2);
-            if (distance < this.closestElement.distance) {
-              this.closestElement = {
-                element,
-                distance,
-              }
+          if (distance < this.closestItem.distance) {
+            this.closestItem = {
+              item: hour,
+              distance,
             }
-            if (this.internal_status.selectedHour?.id === hour.id) {
-              this.selectedElement = element;
-            }
-            element.classList.remove('nearby');
           }
-        }
-        if (this.closestElement.element) {
-          this.closestElement.element.classList.add('nearby');
         }
       }
-      if (this.display == 'minuteSelector') {
-        const target = event.target as HTMLElement;
-        if (target.classList.contains('selectable')) {
-          for (const min of this.internal_status.minutes) {
-            const minElement = this.$refs['min' + min.id] as HTMLElement[];
-            const element = minElement[0];
-            if (element) {
-              element.classList.remove('nearby');
-            }
-          }
-          this.closestElement = {
-            element: target,
-            distance: 0,
-          };
-          return;
-        }
 
-        const x = event.clientX;
-        const y = event.clientY;
-        this.closestElement = {
-          element: null,
-          distance: Infinity,
-        }
-        for (const min of this.internal_status.minutes) {
-          const minElement = this.$refs['min' + min.id] as HTMLElement[];
-          const element = minElement[0];
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            const distance = Math.sqrt((x - rect.left) ** 2 + (y - rect.top) ** 2);
-            if (distance < this.closestElement.distance) {
-              this.closestElement = {
-                element,
-                distance,
-              }
+      if (this.display == 'minuteSelector' || this.display == 'testSelector') {
+
+        for (const min of this.minutes) {
+          const containerLocation = (this.$refs['timeDisplay'] as HTMLElement).getBoundingClientRect()
+          const elementX = containerLocation.x + min.position!.x;
+          const elementY = containerLocation.y + min.position!.y;
+          const distance = Math.sqrt((x - elementX) ** 2 + (y - elementY) ** 2);
+
+          if (distance < this.closestItem.distance) {
+            this.closestItem = {
+              item: min,
+              distance,
             }
-            if (this.internal_status.selectedMinute?.id === min.id) {
-              this.selectedElement = element;
-            }
-            element.classList.remove('nearby');
           }
-        }
-        if (this.closestElement.element) {
-          this.closestElement.element.classList.add('nearby');
         }
       }
     },
+    calculatePosition(value: TimeItem, index: number, array: TimeItem[]): TimeItem {
+      let rot = -90;
+      const angle = 360 / array.length;
+      if (!this.center.x || !this.center.y) return value;
+      console.log(index)
+      rot = (rot + angle * index) ;
+      console.log(rot)
+      console.log(angle)
+      const result = value;
 
+      const radius = value.radius || 100;
+
+      result.position = {
+        x: this.center.x + Math.cos(rot * Math.PI / 180) * radius,
+        y: this.center.y + Math.sin(rot * Math.PI / 180) * radius,
+      };
+      console.log(result.position)
+      return result;
+    }
   },
   computed: {
+    minutes: function () {
+      const minutes: TimeItem[] = Array.from({length: 60}, (_, i) => ({
+        id: i,
+        clockDisplay: String(i % 5 ? '.' : i),
+        label: i.toString().padStart(2, '0'),
+      }));
+      return minutes.map(this.calculatePosition);
+    },
+    hours: function () {
+      return this.am_hours.concat(this.pm_hours);
+    },
     am_hours: function () {
-      return this.internal_status.hours.filter(hour => hour.id < 12)
+      const hours = Array.from({length: 24}, (_, i) => ({
+        id: i,
+        label: i.toString().padStart(2, '0'),
+      }));
+      const filteredHours = hours.filter(hour => hour.id < 12);
+      const added_radius = filteredHours.map(hour => ({...hour, radius: 70 }));
+      return added_radius.map(this.calculatePosition)
     },
     pm_hours: function () {
-      return this.internal_status.hours.filter(hour => hour.id >= 12)
-    },
-    min_display: function () {
-      return this.internal_status.minutes.map(min => ({
-        id: min.id,
-        label: min.id % 5 ? '.' : min.label,
+      const hours = Array.from({length: 24}, (_, i) => ({
+        id: i,
+        label: i.toString().padStart(2, '0'),
       }));
+      const filteredHours = hours.filter(hour => hour.id >= 12);
+      const added_radius = filteredHours.map(hour => ({...hour, radius: 110 }));
+      return added_radius.map(this.calculatePosition)
     },
-    center() {
-      // Center of the clock SVG
-      return {x: 110, y: 110};
+
+    internal_status() {
+      return {
+        selectedHour: this.selectedHour? this.selectedHour : this.timeSelection.selectedHour,
+        selectedMinute: this.selectedMinute? this.selectedMinute : this.timeSelection.selectedMinute,
+      }
     },
     selectedPosition() {
-      if (!this.selectedElement) return null;
-      return this.getElementCenter(this.selectedElement);
+      console.log(this.selectedMinute)
+      if (this.display === 'hourSelector' && this.selectedHour) {
+        return this.getElementCenter(this.selectedHour);
+      }
+      if (this.display === 'minuteSelector' && this.selectedMinute) {
+        return this.getElementCenter(this.selectedMinute);
+      }
+      return {
+        x: 0,
+        y: 0,
+      }
     },
     hoveredPosition() {
-      if (!this.closestElement.element) return null;
-      return this.getElementCenter(this.closestElement.element);
-    }
+      if (!this.closestItem.item) return null;
+      return this.getElementCenter(this.closestItem.item);
+    },
   },
-  watch: {
-    timeSelection: {
-      deep: true,
-      handler(newVal) {
-        this.internal_status = newVal;
-      }
-    }
-  }
 })
 </script>
 <style scoped lang="scss">
@@ -349,13 +371,7 @@ export default defineComponent({
   padding: 5px;
   transition: unset;
 
-  &:hover {
-    outline: solid 1px var(--accent-color);
-  }
 
-  &.nearby {
-    outline: solid 1px var(--accent-color);
-  }
 }
 
 .clock-lines {
@@ -415,24 +431,37 @@ export default defineComponent({
   height: 250px;
 
   .time_selector {
-    left: 50%;
-    transform: translate(-50%, -50%);
-    top: 50%;
+    .locator {
+      margin: unset;
+      padding: unset;
+      border: unset;
+      width: 0;
+      height: 0;
+      line-height: 0;
 
-    &.am {
-      @include on-circle($item-count: 12, $circle-size: 150px, $item-size: 30px);
-      position: absolute;
-    }
+      .selectable {
+        font-size: 1rem;
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        line-height: 1.5;
+        transition: border-color 0.5s ease;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        &:hover {
+          background-color: transparent;
+          outline: solid 1px var(--text-color);
+        }
 
-    &.pm {
-      @include on-circle($item-count: 12, $circle-size: 200px, $item-size: 30px);
-      position: absolute;
-    }
+        &.nearby {
+          background-color: transparent;
+          outline: solid 1px var(--text-color);
+        }
 
 
-    &.minutes {
-      @include on-circle($item-count: 60, $circle-size: 200px, $item-size: 30px);
-      position: absolute;
+      }
     }
 
   }
