@@ -56,7 +56,6 @@
             <div
                 class="selectable"
                 :class="selectedClass(hour)"
-                @click="selectHour(hour)"
             >
               {{ hour.label }}
             </div>
@@ -78,7 +77,6 @@
         >
           <div class="selectable"
                :class="selectedClass(min)"
-               @click="selectMinute(min)"
           >
             {{ min.clockDisplay }}
           </div>
@@ -104,7 +102,7 @@
 import {defineComponent, type PropType} from 'vue'
 import {type IScrollListItem} from "@/components/ScrollList.vue";
 
-interface TimeItem extends IScrollListItem {
+export interface TimeItem extends IScrollListItem {
   clockDisplay?: string;
   radius?: number;
   position?: {
@@ -193,20 +191,16 @@ export default defineComponent({
 
       if (this.display === 'hourSelector') {
         this.selectHour(this.closestItem.item)
-        this.submitUpdate();
       } else if (this.display === 'minuteSelector') {
         this.selectMinute(this.closestItem.item)
-        this.submitUpdate();
       }
     },
     selectHour(hour: IScrollListItem) {
-      console.log(hour)
       this.selectedHour = this.hours.find(h => h.id === Number(hour.id));
-      this.display = 'minuteSelector';
       this.submitUpdate();
+      this.display = 'minuteSelector';
     },
     selectMinute(min: IScrollListItem) {
-      console.log(min)
       this.selectedMinute = this.minutes.find(m => m.id === Number(min.id));
       this.submitUpdate();
       this.$emit('close');

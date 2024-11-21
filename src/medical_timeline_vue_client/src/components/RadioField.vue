@@ -58,6 +58,7 @@ export default defineComponent({
 
         this.selectedOption = null;
       }
+      this.$emit("update:modelValue", this.selectedOption);
     }
   }
 })

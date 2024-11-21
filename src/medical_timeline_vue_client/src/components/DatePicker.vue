@@ -1,40 +1,44 @@
 <template>
-  <div class="date_time">
-    <div class="selectable">
-      <div @click.prevent.stop="showYearSelector = true">{{ dateSelection.selectedYear?.label }}</div>
-      <ScrollList v-if="showYearSelector"
-                  :items="dateSelection.years"
-                  :value="dateSelection.selectedYear"
-                  v-model="dateSelection.selectedYear"
-                  @change="handleClose"
-                  @close="handleClose"
-      />
-    </div>
-    /
-    <div class="selectable">
-      <div @click.prevent.stop="showMonthSelector = true">{{ dateSelection.selectedMonth?.label }}</div>
-      <ScrollList v-if="showMonthSelector"
-                  :items="dateSelection.months"
-                  :value="dateSelection.selectedMonth"
-                  v-model="dateSelection.selectedMonth"
-                  @change="handleClose"
-                  @close="handleClose"
-      />
-    </div>
-    /
-    <div class="selectable">
-      <div @click.prevent.stop="showDaySelector = true">{{ dateSelection.selectedDay?.label }}</div>
-      <ScrollList v-if="showDaySelector"
-                  :items="dateSelection.days"
-                  :value="dateSelection.selectedDay"
-                  v-model="dateSelection.selectedDay"
-                  @change="handleClose"
-                  @close="handleClose"
-      />
-    </div>
-    :
-    <div class="selectable">
-      <div @click="showCalendarSelector = true"> 📅︎︎</div>
+  <div class="input-wrapper">
+    <label v-if="label" class="input-label">{{ label }}:
+      <span class="date_label">{{ selectedDate.getTime() }}</span>
+    </label>
+    <div class="date_time custom-input-general">
+      <div class="selectable">
+        <div @click.prevent.stop="showYearSelector = true">{{ dateSelection.selectedYear?.label }}</div>
+        <ScrollList v-if="showYearSelector"
+                    :items="dateSelection.years"
+                    :value="dateSelection.selectedYear"
+                    v-model="dateSelection.selectedYear"
+                    @change="handleClose"
+                    @close="handleClose"
+        />
+      </div>
+      /
+      <div class="selectable">
+        <div @click.prevent.stop="showMonthSelector = true">{{ dateSelection.selectedMonth?.label }}</div>
+        <ScrollList v-if="showMonthSelector"
+                    :items="dateSelection.months"
+                    :value="dateSelection.selectedMonth"
+                    v-model="dateSelection.selectedMonth"
+                    @change="handleClose"
+                    @close="handleClose"
+        />
+      </div>
+      /
+      <div class="selectable">
+        <div @click.prevent.stop="showDaySelector = true">{{ dateSelection.selectedDay?.label }}</div>
+        <ScrollList v-if="showDaySelector"
+                    :items="dateSelection.days"
+                    :value="dateSelection.selectedDay"
+                    v-model="dateSelection.selectedDay"
+                    @change="handleClose"
+                    @close="handleClose"
+        />
+      </div>
+      :
+      <div class="selectable">
+        <div @click="showCalendarSelector = true"> 📅︎︎</div>
         <CalendarDatePicker
             v-if="showCalendarSelector"
             :key="calendarKey"
@@ -42,12 +46,15 @@
             @close="handleClose"
             @change="calendarSelectionChange"
         />
-    </div>
-    <div class="selectable">
-      <div @click="showTimeSelector = true">{{timeDisplay}}</div>
-      <TimePicker v-if="showTimeSelector" :timeSelection="timeSelection" v-model="timeSelection" @close="handleClose" />
+      </div>
+      <div class="selectable">
+        <div @click="showTimeSelector = true">{{ timeDisplay }}</div>
+        <TimePicker v-if="showTimeSelector" :timeSelection="timeSelection" v-model="timeSelection"
+                    @close="handleClose"/>
+      </div>
     </div>
   </div>
+
 </template>
 <script lang="ts">
 import {defineComponent} from 'vue'
@@ -78,11 +85,14 @@ export type DateSelection = {
 }
 
 
-
 export default defineComponent({
   name: "DatePicker",
   components: {CalendarDatePicker, ScrollList, TimePicker},
   props: {
+    label: {
+      type: String,
+      default: ''
+    },
     value: {
       type: Date,
       default: new Date()
@@ -220,11 +230,11 @@ export default defineComponent({
       const currentMinute = this.selectedDate.getMinutes();
       this.timeSelection.selectedHour = {
         id: currentHour,
-        label: currentHour < 10? `0${currentHour}` : currentHour
+        label: currentHour < 10 ? `0${currentHour}` : currentHour
       };
       this.timeSelection.selectedMinute = {
         id: currentMinute,
-        label: currentMinute < 10? `0${currentMinute}` : currentMinute
+        label: currentMinute < 10 ? `0${currentMinute}` : currentMinute
       };
     }
 
@@ -232,11 +242,21 @@ export default defineComponent({
 })
 </script>
 <style scoped lang="scss">
+
+.date_label {
+  color: var(--text-color);
+  font-size: var(--font-small);
+  user-select: all;
+  pointer-events: all;
+  z-index: 1;
+  position: relative;
+}
 .date_time {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: row;
+  width: fit-content;
 }
 
 .selectable {

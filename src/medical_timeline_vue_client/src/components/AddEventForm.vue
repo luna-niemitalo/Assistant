@@ -5,11 +5,14 @@
     <BaseNumberInput label="Severity" v-model.number="severity" :min="1" :max="10" :step="0.1" :value="severity"/>
     <BaseTextInput v-model="category" label="category" />
 
-    <RadioField :options="['at', 'around', 'between']" label="Radio"/>
+    <RadioField v-model="timeType" :options="['at', 'around', 'between']" label="Timing type"/>
 
-    <input type="color">
-    <input type="datetime-local">
-    <DateTimePicker label="Date" />
+
+    <DatePicker v-show="timeType == 'at'" v-model="date" label="Timestamp" />
+    <RadioField v-show="timeType == 'around'" v-model="around" :options="['morning', 'noon', 'evening', 'night']" label="Around"/>
+    <DatePicker v-show="timeType == 'between'" v-model="date" label="Start" />
+    <DatePicker v-show="timeType == 'between'" v-model="date" label="End" />
+
     <TagList :tags="tags" v-model="pickedTags"/>
     <BaseButton v-model="symptom" :toggle="true" label="Symptom" size="small" icon-size="medium" />
     <BaseTextArea v-model="notes" label="Notes" />
@@ -36,7 +39,7 @@ import BaseTextArea from "@/components/BaseTextArea.vue";
 import BaseButton from "@/components/BaseButton.vue";
 import TagList from "@/components/TagList.vue";
 import RadioField from "@/components/RadioField.vue";
-import DateTimePicker from "@/components/DateTimePicker.vue";
+import DatePicker from "@/components/DatePicker.vue";
 
 export interface dataTypings {
   title: string;
@@ -47,11 +50,16 @@ export interface dataTypings {
   tags: ITag[]; // populated in mounted hook from API call
   pickedTags: 0;
   submittedSuccessfully?: boolean;
+  date: Date;
+  start?: Date;
+  end?: Date;
+  around?: 'morning' | 'noon' | 'evening' | 'night';
+  timeType?: 'at' | 'around' | 'between';
 }
 export default defineComponent({
   name: 'AddEventForm',
 
-  components: {DateTimePicker, RadioField, TagList, BaseButton, BaseTextArea, BaseNumberInput, BaseTextInput },
+  components: {DatePicker, RadioField, TagList, BaseButton, BaseTextArea, BaseNumberInput, BaseTextInput },
   data() {
     return {
       title: '',
@@ -59,10 +67,13 @@ export default defineComponent({
       symptom: false,
       category: '',
       notes: '',
-      tags: [], // populated in mounted hook from API call
-      pickedTags: 0, // used for tracking selected tags, not currently in use in this form
+      tags: [],
+      pickedTags: 0,
       submittedSuccessfully: undefined,
-
+      date: new Date(),
+      start: undefined,
+      end: undefined,
+      timeType: undefined,
     } as dataTypings;
   },
   mounted: function () {

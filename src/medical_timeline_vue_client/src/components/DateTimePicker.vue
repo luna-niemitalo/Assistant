@@ -1,16 +1,12 @@
 
 
 <template>
-  <div class="input-wrapper">
-    <label v-if="label" class="input-label">{{ label }}:
-      <span class="date_label">{{selectedDate}}</span>
-    </label>
-    <div class="custom-input-general">
+
+    <div class="">
 
       <DatePicker v-model="selectedDate" />
     </div>
 
-  </div>
 
 </template>
 <script lang="ts">
@@ -21,27 +17,16 @@ export default defineComponent({
   name: "DateTimePicker",
   components: {DatePicker},
   props: {
-    label: {
-      type: String,
-      default: ''
-    },
-    value: {
-      type: Date,
-      default: new Date()
-    }
   },
   data() {
     return {
-      selectedDate: this.value
+      selectedDate: new Date()
     }
   }
 })
 </script>
 <style scoped lang="scss">
-.date_label {
-  color: var(--text-color);
-  font-size: var(--font-small);
-}
+
 
 .custom-input-general {
   width: 600px;
